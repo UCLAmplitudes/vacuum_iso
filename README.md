@@ -1,5 +1,3 @@
-`IGraph/M` is needed for the routines to work. Download and install from [here](https://github.com/szhorvat/IGraphM).
-
-Also *Mathematica* 10.0 or later is needed for moth things to work.
+*Mathematica* 10.0 or later and `IGraph/M` are needed for the routines to work. To download and install `IGraph/M` go [here](https://github.com/szhorvat/IGraphM).
 
 In order to use the routines load `vacuum_iso_bubbles.m` into *Mathematica*.
