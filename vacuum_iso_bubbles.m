@@ -3,7 +3,7 @@
 <<IGraphM`;
 
 
-(* ::Chapter::Closed:: *)
+(* ::Chapter:: *)
 (*General Graph Functions*)
 
 
@@ -97,11 +97,12 @@ ClearAll[momCons]
 momCons::usage = " momCons[G,n,L] solves momentum conservation for the graph G given
 in our standard notation {{-1},{-2},...,{1,5,-7},...}. Optionally one can specify the
 number n of external particles and thenumber of loops L in order to solve for the right
-variables. By default it works for five-loop vacuum graphs."
+variables. By default it works for five-loop vacuum graphs.";
 momCons[graph_,n_:0,L_:5]:=Module[{mom},
 mom[i_]/;i<0:=-mom[-i];
 mom[i__]:=mom/@{i};
-mom[i_]/;Abs[i]<=n:=k[i];
+mom[i_]/;Abs[i]<n:=k[i];
+mom[n]:= - Total[k/@Range[1,n-1]];
 mom[i_]/;Abs[i]>n:=l[i];
 Solve[(Total/@(mom@@@(Select[graph,Length[#]>1&])))==0,l/@Range[n+L+1,nEdges[graph]]][[1]]
 ]
