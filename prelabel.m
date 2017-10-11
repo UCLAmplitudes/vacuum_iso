@@ -10,10 +10,12 @@ If[$MachineName=="julio-mba",
 <<vacuum_basis.m;
 
 
+ClearAll[graphToMult,multToGraph,findVacuumRep]
+
 graphToMult::usage = "graphToMult[G] takes the graph G given
 in our standard notation {{-1},{-2},...,{1,5,-7},...} and uses
-momentum conservation in the vertices to bunble together doubled 
-propagators, producing a daughter graph representative."
+momentum conservation in the vertices to bundle together doubled 
+propagators, producing a daughter graph representative.";
 graphToMult[graph_]:=Module[{rules,invrules,mult,collapsed},
 rules=momCons[graph];
 invrules=Cases[momCons[graph],(a_->b_Plus)->((b^2)->a^2)]//Factor;
@@ -24,22 +26,25 @@ Values@KeySort@Union[mult,collapsed]
 
 multToGraph::usage = "multToGraph[M,G] takes a parent graph G given
 in our standard notation {{-1},{-2},...,{1,5,-7},...} and a list of 
-multiplicities M of the different edges and produces a doughter graph 
-with the right propagator structure by pinching edges in the parent
-with negative of zero multiplicity."
+multiplicities M of the different edges and produces the daughter graph 
+with the right propagator structure by pinching the edges in the parent
+with negative or zero multiplicity.";
 multToGraph[mult_,parent_]:=collapsePropagator[parent,Catenate@Union[Position[mult,0],Position[mult,x_Integer?Negative]]]
 toVacuum[graph_,n_:4]:=Module[{auxgraph,tocollaps},
   auxgraph=(collapsePropagator[graph,Range[n]]/.{a_Integer :> Sign[a](Abs[a]-n)});
   multToGraph[graphToMult[auxgraph],auxgraph]/.{a_Integer :> Sign[a](Abs[a]+n)}
 ];
 
-findVacuumRep::usage = "findVacuumRep[G,B] takes a graph G given
-in our standard notation {{-1},{-2},...,{1,5,-7},...} and a list of 
-graphs B (see below) in the same notation and finds a representative of B by sliding bubbles,
-and a corresponding graph in B that is isomorphic to the representative, if any.
-For speed B must be an Association of the form #ofEdges->{List of graphs}"
-findVacuumRep[graph_?hasTadpolesQ,basis_]:=Insert[First@Position[Outer[isomorphicQuptoTadpoles,slideBubbles[graph],basis@nEdges[graph],1],True],nEdges[graph],{2}]
-findVacuumRep[graph_,basis_]:=Insert[First@Position[Outer[isomorphicQ,slideBubbles[graph],basis@nEdges[graph],1],True],nEdges[graph],{2}]
+findVacuumRep::usage = "findVacuumRep[G,B] takes a graph G and a set of 
+graphs B both given in our standard notation {{-1},{-2},...,{1,5,-7},...}, 
+and returns:
+a) a representative of G in slideBubblesp[G]
+b) corresponding graph in B that is isomorphic to (a), if any.
+The function has an optional third argument which when True only returns the
+indices of (a) in slideBubblesp[G] and of (b) in the Association B.";
+findVacuumRep[graph_,basis_List,onlyIndices_:False]:=findVacuumRep[graph,GroupBy[basis,nEdges]]
+findVacuumRep[graph_?hasTadpolesQ,basis_,onlyIndices_:False]:=If[onlyIndices,{#[[1]],{#[[2]],#[[3]]}},{slideBubbles[graph][[#[[1]]]],basis[#[[2]]][[#[[3]]]]}]&@Insert[First@Position[Outer[isomorphicQuptoTadpoles,slideBubbles[graph],basis@nEdges[graph],1],True],nEdges[graph],{2}]
+findVacuumRep[graph_,basis_Association,onlyIndices_:False]:=If[onlyIndices,{#[[1]],{#[[2]],#[[3]]}},{slideBubbles[graph][[#[[1]]]],basis[#[[2]]][[#[[3]]]]}]&@Insert[First@Position[Outer[isomorphicQ,slideBubbles[graph],basis@nEdges[graph],1],True],nEdges[graph],{2}]
 
 
 graphPlot@multToGraph[{2,2,1,1,1,1,1,1,1,1,0,0},cont[0][[-5]]]
@@ -49,9 +54,4 @@ findVacuumRep[multToGraph[{2,2,0,1,-1,-1,1,1,1,1,0,0},cont[0][[-5]]],basiswfact]
 representatives=Table[findVacuumRep[toVacuum[Diag[i]],basiswfact],{i,1,100}];
 
 
-testcase=84;
-graphPlot@slideBubbles[toVacuum[Diag[testcase]]][[representatives[[testcase,1]]]]
-graphPlot@basiswfact[representatives[[testcase,2]]][[representatives[[testcase,3]]]]
-
-
-
+graphPlot/@representatives[[1]]
