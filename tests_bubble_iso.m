@@ -6,9 +6,11 @@ If[$MachineName=="julio-mba",
   Get["/u/project/bern/bern/fourloop/bcj/math_integrateN8/VacuumData5Loops"]
 ];
 <<vacuum_iso_bubbles.m;
+<<fiveloop.m
+<<vacuum_basis.m;
 
 
-(* ::Subchapter:: *)
+(* ::Subchapter::Closed:: *)
 (*Some Easy Tests*)
 
 
@@ -35,19 +37,40 @@ graphPlot/@slideBubbles[sunsetdaughters[[2]]]
 graphPlot/@slideBubbles[sunsetdaughters[[3]]]
 
 
-(* ::Subchapter:: *)
-(*Other test*)
+(* ::Subchapter::Closed:: *)
+(*Timing test*)
 
 
-testgraph=cont[0][[-6]]
+testgraph=cont[0][[-5]]
 testcontact=collapsePropagator[testgraph,{12,11}]
 graphPlot/@{testgraph,testcontact}
-isomorphicQuptoBubblesOld[testgraph,testcontact]//Timing
-isomorphicQuptoBubbles[testgraph,testcontact]//Timing
+isomorphicQuptoBubblesOld[testgraph,testcontact]//AbsoluteTiming
+isomorphicQuptoBubbles[testgraph,testcontact]//AbsoluteTiming
 
 
-Timing[isomorphicQuptoBubblesOld[#,collapsePropagator[#,{11,12}]]][[1]]&/@cont[0]
-Timing[isomorphicQuptoBubbles[#,collapsePropagator[#,{11,12}]]][[1]]&/@cont[0]
+AbsoluteTiming[isomorphicQuptoBubblesOld[#,collapsePropagator[#,{11,12}]]][[1]]&/@cont[0]
+AbsoluteTiming[isomorphicQuptoBubbles[#,collapsePropagator[#,{11,12}]]][[1]]&/@cont[0]
 
 
+(* ::Subchapter::Closed:: *)
+(*Finding vacuum representatives and isomorphism*)
 
+
+graphPlot@multToGraph[{2,2,1,1,1,1,1,1,1,1,0,0},cont[0][[-5]]]
+findVacuumRep[multToGraph[{2,2,0,1,-1,-1,1,1,1,1,0,0},cont[0][[-5]]],basiswfact]
+
+
+diag=400;
+{testgraph1,testgraph2}=findVacuumRep[toVacuum[Diag[diag]],basiswfact];
+graphPlot/@%
+isomorphismRule[testgraph1,testgraph2]
+
+
+vacreps=Table[findVacuumRep[toVacuum[Diag[i]],basiswfact],{i,1,410}];
+vacrepsnumbers=Table[findVacuumRep[toVacuum[Diag[i]],basiswfact,True],{i,1,410}];
+vacrepdots=graphToMult/@((collapsePropagator[#,Range[4]]&/@(Diag/@Range[410]))/.{a_Integer :> Sign[a](Abs[a]-4)});
+vacrepisos=isomorphismRule@@@vacreps;
+
+
+If[FileExistsQ["vacuum_representatives.m"],DeleteFile["vacuum_representatives.m"]]
+Save["vacuum_representatives.m",{vacreps,vacrepsnumbers,vacrepdots,vacrepisos}]
