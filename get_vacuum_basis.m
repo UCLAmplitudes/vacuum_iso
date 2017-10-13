@@ -14,10 +14,10 @@ Length@(Union@@%%)
 
 (* We define associations for each of the top level (12 edge) graphs *)
 ClearAll[family]
-family[1] = Association[{12->{top[1]}}];
-family[2] = Association[{12->{top[2]}}];
-family[3] = Association[{12->{top[3]}}];
-family[4] = Association[{12->{top[4]}}];
+family[1] = Association[{12->{cube}}];
+family[2] = Association[{12->{xcube}}];
+family[3] = Association[{12->{tennis}}];
+family[4] = Association[{12->{xtennis}}];
 
 
 (* We obtain all the daughers dow to 5 propagators up to isomophisms, sliding bubbles, and loop level drop *)
@@ -37,9 +37,10 @@ Length/@basiswfact
 
 
 (* Now we drop graphs with tadpoles and graphs with dangling sunsets (i.e., factorized graphs) *)
-basisnofact=(Select[#,(Not[hasTadpolesQ[#]]&&Not[hasDanglingSunsetQ[#]])&]&/@basiswtad);
+basisnofact=(Select[#,(Not[hasTadpolesQ[#]]&&Not[hasDanglingSunsetQ[#]])&]&/@basiswfact);
 (* And the counting again matches*)
 Length/@basisnofact
 
 
+If[FileExistsQ["vacuum_basis.m"],DeleteFile["vacuum_basis.m"]]
 Save["vacuum_basis.m",{basisnofact,basiswfact}]
