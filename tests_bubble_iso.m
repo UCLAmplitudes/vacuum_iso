@@ -52,7 +52,7 @@ AbsoluteTiming[isomorphicQuptoBubblesOld[#,collapsePropagator[#,{11,12}]]][[1]]&
 AbsoluteTiming[isomorphicQuptoBubbles[#,collapsePropagator[#,{11,12}]]][[1]]&/@cont[0]
 
 
-(* ::Subchapter::Closed:: *)
+(* ::Subchapter:: *)
 (*Finding vacuum representatives and isomorphism*)
 
 
@@ -66,11 +66,37 @@ graphPlot/@%
 isomorphismRule[testgraph1,testgraph2]
 
 
+multtest=graphToMult@((collapsePropagator[#,Range[4]]&@(Diag[280]))/.{a_Integer :> Sign[a](Abs[a]-4)})
+KeyMap[(#-4)&,KeySort[Abs/@Association@@vacrepisos[[280]]]]
+AssociationThread[Catenate@Position[multtest,0],Complement[Range[16],Values[%]]]
+(Normal@KeySort@Union[%,%%])
+Permute[multtest,Values@%]
+
+
+multIsoPerm[mult_,iso_]:=Module[{aux,auxrest},
+aux=KeyMap[(#-4)&,KeySort[Abs/@Association@@iso]];
+auxrest=AssociationThread[Catenate@Position[mult,0],Complement[Range[Length@mult],Values[aux]]];
+Permute[mult,Values@(Normal@KeySort@Union[aux,auxrest])]
+]
+
+
 vacreps=Table[findVacuumRep[toVacuum[Diag[i]],basiswfact],{i,1,410}];
 vacrepsnumbers=Table[findVacuumRep[toVacuum[Diag[i]],basiswfact,True],{i,1,410}];
 vacrepdots=graphToMult/@((collapsePropagator[#,Range[4]]&/@(Diag/@Range[410]))/.{a_Integer :> Sign[a](Abs[a]-4)});
 vacrepisos=isomorphismRule@@@vacreps;
 
 
+vacrepdotsbasis=Drop[#,-1]&/@MapThread[multIsoPerm,{vacrepdots,vacrepisos}];
+
+
 If[FileExistsQ["vacuum_representatives.m"],DeleteFile["vacuum_representatives.m"]]
-Save["vacuum_representatives.m",{vacreps,vacrepsnumbers,vacrepdots,vacrepisos}]
+Save["vacuum_representatives.m",{vacreps,vacrepsnumbers,vacrepdots,vacrepdotsbasis,vacrepisos}]
+
+
+graphToMult/@((collapsePropagator[#,Range[4]]&/@(Diag/@Range[410]))/.{a_Integer :> Sign[a](Abs[a]-4)});
+
+
+graphToMult@((collapsePropagator[#,Range[4]]&@(Diag[1]))/.{a_Integer :> Sign[a](Abs[a]-4)})
+
+
+
