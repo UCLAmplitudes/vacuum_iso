@@ -13,11 +13,12 @@ Length@(Union@@%%)
 
 
 (* We define associations for each of the top level (12 edge) graphs *)
-ClearAll[family]
-family[1] = Association[{12->{cube}}];
-family[2] = Association[{12->{xcube}}];
-family[3] = Association[{12->{tennis}}];
-family[4] = Association[{12->{xtennis}}];
+ClearAll[top,family]
+top=AssociationThread[Range[4],{cube,xcube,tennis,xtennis}];
+family[1] = Association[{12->{top[1]}}];
+family[2] = Association[{12->{top[2]}}];
+family[3] = Association[{12->{top[3]}}];
+family[4] = Association[{12->{top[4]}}];
 
 
 (* We obtain all the daughers dow to 5 propagators up to isomophisms, sliding bubbles, and loop level drop *)
