@@ -93,7 +93,7 @@ Solve[(Total/@(mom@@@(Select[graph,Length[#]>1&])))==0,l/@Range[n+L+1,nEdges[gra
 ]
 
 
-(* ::Chapter::Closed:: *)
+(* ::Chapter:: *)
 (*Graph Isomorphism*)
 
 
@@ -125,8 +125,9 @@ isomorphicQ[diag1_List,diag2_List]:=Module[
 
 
 ClearAll[isomorphismRule]
-isomorphismRule::usage = "isomorphismRule[G1,G2] provides an isomorphism between graphs G1 and G2.
-I also works for graphs with bubbles, sunsets etc."
+isomorphismRule::usage = "isomorphismRule[G1,G2] provides an isomorphism between graphs G1 and G2
+given in our standard notation {{-1},{-2},...,{1,5,-7},...}.
+I also works for graphs with bubbles, sunsets etc.";
 isomorphismRule[graph1_?hasBubbleLikeQ,graph2_?hasBubbleLikeQ]:=Module[{mmagraph1,mmagraph2,colors1,colors2,vertexiso,edges1,edges2,targetedges},
   mmagraph1=toMmaGraphwLab[graph1];
   mmagraph2=toMmaGraphwLab[graph2];
@@ -136,7 +137,7 @@ isomorphismRule[graph1_?hasBubbleLikeQ,graph2_?hasBubbleLikeQ]:=Module[{mmagraph
   edges1=PropertyValue[mmagraph1,EdgeLabels]/.Rule[a_,b_]:>Rule[a/.vertexiso,b];
   edges2=PropertyValue[mmagraph2,EdgeLabels];
   targetedges=Catenate[(((First/@edges1)/.edges2)/.DirectedEdge[a_,b_]:>-DirectedEdge[b,a])/.edges2];
-  Sort@Catenate[Thread/@Thread[(Last/@edges1)-> targetedges]]
+  Sort@Catenate[Thread/@Thread[(Last/@edges1)-> targetedges]]/.Rule[a_?Negative,b_]:>Rule[-a,-b]
 ]
 isomorphismRule[graph1_,graph2_]:=Module[{mmagraph1,mmagraph2,colors1,colors2,vertexiso,edges1,edges2,targetedges},
   mmagraph1=toMmaGraphwLab[graph1];
@@ -145,29 +146,28 @@ isomorphismRule[graph1_,graph2_]:=Module[{mmagraph1,mmagraph2,colors1,colors2,ve
   edges1=PropertyValue[mmagraph1,EdgeLabels]/.Rule[a_,b_]:>Rule[a/.vertexiso,b];
   edges2=PropertyValue[mmagraph2,EdgeLabels];
   targetedges=Catenate[(((First/@edges1)/.edges2)/.DirectedEdge[a_,b_]:>-DirectedEdge[b,a])/.edges2];
-  Sort[Thread[(Last/@edges1)-> targetedges]]
+  Sort[Thread[(Last/@edges1)-> targetedges]]/.Rule[a_?Negative,b_]:>Rule[-a,-b]
 ]
 
 
 (* Code to work on for automorphismRules*)
-(*ClearAll[isomorphismRule]
-isomorphismRule[graph1_,graph2_]:=Module[{mmagraph1,mmagraph2,colors1,colors2,vertexiso,edges1,edges2,targetedges},
-  mmagraph1=toMmaGraphwLab[graph1];
-  mmagraph2=toMmaGraphwLab[graph2];
-  colors1 = Length/@Association@@(PropertyValue[mmagraph1,EdgeLabels]/.DirectedEdge[a_,b_]:>UndirectedEdge[a,b]);
-  colors2 = Length/@Association@@(PropertyValue[mmagraph2,EdgeLabels]/.DirectedEdge[a_,b_]:>UndirectedEdge[a,b]);
-  vertexiso = IGVF2FindIsomorphisms[{UndirectedGraph@mmagraph1,"EdgeColors"->colors1},{UndirectedGraph@mmagraph2,"EdgeColors"->colors2}];
-  Print[vertexiso];
-  (*vertexiso=findIsoFunc[UndirectedGraph@mmagraph1,UndirectedGraph@mmagraph2];*)
-  edges1=Table[PropertyValue[mmagraph1,EdgeLabels]/.Rule[a_,b_]:>Rule[a/.iso,b],{iso,vertexiso}];
-  edges2=PropertyValue[mmagraph2,EdgeLabels];
-  targetedges=Table[(((First/@aux)/.edges2)/.DirectedEdge[a_,b_]:>-DirectedEdge[b,a])/.edges2,{aux,edges1}];
-  SortBy[#,First]&/@(Table[(Last/@First@edges1)[[i]]->#[[i]],{i,1,Length@edges2}]&/@targetedges)
-]*)
+ClearAll[automorphismRules]
+automorphismRules::usage = "automorphismRules[G] all automorphisms of graph G given 
+in our standard notation {{-1},{-2},...,{1,5,-7},...}.
+I also works for graphs with bubbles, sunsets etc.";
+automorphismRules[graph_]:=Module[{mmagraph,colors,vertexiso,edges1,edges2,targetedges,bubbleisos},
+  mmagraph=toMmaGraphwLab[graph];
+  colors = Length/@Association@@(PropertyValue[mmagraph,EdgeLabels]/.DirectedEdge[a_,b_]:>UndirectedEdge[a,b]);
+  vertexiso = IGVF2FindIsomorphisms[{UndirectedGraph@mmagraph,"EdgeColors"->colors},{UndirectedGraph@mmagraph,"EdgeColors"->colors}];
+  edges1=Table[PropertyValue[mmagraph,EdgeLabels]/.Rule[a_,b_]:>Rule[a/.iso,b],{iso,vertexiso}];
+  edges2=PropertyValue[mmagraph,EdgeLabels];
+  targetedges=Table[(*Catenate[*)(((First/@aux)/.edges2)/.DirectedEdge[a_,b_]:>-DirectedEdge[b,a])/.edges2(*]*),{aux,edges1}];
+  bubbleisos=MapThread[Sort[Thread[(Last/@#1)-> #2]]&,{edges1,targetedges}];
+  bubbleisos//.{x___,Rule[a_List,b_List],y___}:>Sequence@@({x,Sequence@@#,y}&/@ Map[Thread[Rule[a,#]]&, Permutations[b]])
+]
 
 
-
-(* ::Chapter::Closed:: *)
+(* ::Chapter:: *)
 (*Tadpole-like objects*)
 
 
@@ -194,7 +194,7 @@ isomorphicQuptoTadpoles[g1_,g2_]/;(nTadpoles[g1]!=nTadpoles[g2]):=False
 isomorphicQuptoTadpoles[g1_,g2_]:=isomorphicQuptoBubbles[collapsePropagator[g1,Union@@findTadpoleLegs/@findTadpoles[g1]],collapsePropagator[g2,Union@@findTadpoleLegs/@findTadpoles[g2]]]
 
 
-(* ::Chapter::Closed:: *)
+(* ::Chapter:: *)
 (*Bubble-like objects*)
 
 
@@ -294,7 +294,7 @@ temp=Or@@Values@(Or@@isomorphicQ@@@#&/@temp)
 ]
 
 
-(* ::Chapter:: *)
+(* ::Chapter::Closed:: *)
 (*Vacuum graphs*)
 
 
