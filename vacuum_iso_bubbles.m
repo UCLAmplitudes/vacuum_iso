@@ -105,7 +105,8 @@ isomorphicAdjQ[diag1_List,diag2_List]:=Module[
 {g1,g2,bubQ,igmFlag=ContainsAny[$Packages,{"IGraphM`"}]},
         g1 = toMmaAdj[diag1];
         g2 = toMmaAdj[diag2];
-        bubQ = And[MultigraphQ[g1],MultigraphQ[g2]];
+        (* Changed following check from And to Or because Mathematica 10 has some bugs when finding Multigraphs *)
+        bubQ = Or[MultigraphQ[g1],MultigraphQ[g2]];
         If[bubQ&&igmFlag,
                 Return[IGIsomorphicQ[g1,g2]]];
         Return[IsomorphicGraphQ[g1,g2]]
@@ -117,7 +118,8 @@ isomorphicQ[diag1_List,diag2_List]:=Module[
 {g1,g2,bubQ,igmFlag=ContainsAny[$Packages,{"IGraphM`"}]},
         g1 = toMmaUndirGraph[diag1];
         g2 = toMmaUndirGraph[diag2];
-        bubQ = And[MultigraphQ[g1],MultigraphQ[g2]];
+        (* Changed following check from And to Or because Mathematica 10 has some bugs when finding Multigraphs *)
+        bubQ = Or[MultigraphQ[g1],MultigraphQ[g2]]; 
         If[bubQ&&igmFlag,
                 Return[IGIsomorphicQ[g1,g2]]];
         Return[IsomorphicGraphQ[g1,g2]]
