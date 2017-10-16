@@ -150,7 +150,6 @@ isomorphismRule[graph1_,graph2_]:=Module[{mmagraph1,mmagraph2,colors1,colors2,ve
 ]
 
 
-(* Code to work on for automorphismRules*)
 ClearAll[automorphismRules]
 automorphismRules::usage = "automorphismRules[G] all automorphisms of graph G given 
 in our standard notation {{-1},{-2},...,{1,5,-7},...}.
@@ -294,7 +293,7 @@ temp=Or@@Values@(Or@@isomorphicQ@@@#&/@temp)
 ]
 
 
-(* ::Chapter::Closed:: *)
+(* ::Chapter:: *)
 (*Vacuum graphs*)
 
 
@@ -332,5 +331,23 @@ b) corresponding graph in B that is isomorphic to (a), if any.
 The function has an optional third argument which when True only returns the
 indices of (a) in slideBubblesp[G] and of (b) in the Association B.";
 findVacuumRep[graph_,basis_List,onlyIndices_:False]:=findVacuumRep[graph,GroupBy[basis,nEdges]]
-findVacuumRep[graph_?hasTadpolesQ,basis_,onlyIndices_:False]:=If[onlyIndices,{#[[1]],{#[[2]],#[[3]]}},{slideBubbles[graph][[#[[1]]]],basis[#[[2]]][[#[[3]]]]}]&@Insert[First@Position[Outer[isomorphicQuptoTadpoles,slideBubbles[graph],basis@nEdges[graph],1],True],nEdges[graph],{2}]
-findVacuumRep[graph_,basis_Association,onlyIndices_:False]:=If[onlyIndices,{#[[1]],{#[[2]],#[[3]]}},{slideBubbles[graph][[#[[1]]]],basis[#[[2]]][[#[[3]]]]}]&@Insert[First@Position[Outer[isomorphicQ,slideBubbles[graph],basis@nEdges[graph],1],True],nEdges[graph],{2}]
+findVacuumRep[graph_?hasTadpolesQ,basis_,onlyIndices_:False]:=Module[{isomorphic},
+  isomorphic=Position[Outer[isomorphicQuptoTadpoles,slideBubbles[graph],basis@nEdges[graph],1],True];
+  If[isomorphic=={}, 
+    Return[{}], 
+    If[onlyIndices,
+      Return[{#[[1]],{#[[2]],#[[3]]}}&@Insert[First@isomorphic,nEdges[graph]]],
+      Return[{slideBubbles[graph][[#[[1]]]],basis[#[[2]]][[#[[3]]]]}&@Insert[First@isomorphic,nEdges[graph],{2}]]
+    ];
+  ];
+];
+findVacuumRep[graph_,basis_Association,onlyIndices_:False]:=Module[{isomorphic},
+  isomorphic=Position[Outer[isomorphicQ,slideBubbles[graph],basis@nEdges[graph],1],True];
+  If[isomorphic=={}, 
+    Return[{}], 
+    If[onlyIndices,
+      Return[{#[[1]],{#[[2]],#[[3]]}}&@Insert[First@isomorphic,nEdges[graph]]],
+      Return[{slideBubbles[graph][[#[[1]]]],basis[#[[2]]][[#[[3]]]]}&@Insert[First@isomorphic,nEdges[graph],{2}]]
+    ];
+  ];
+];
