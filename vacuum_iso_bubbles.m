@@ -334,22 +334,22 @@ The function has an optional third argument which when True only returns the
 indices of (a) in slideBubblesp[G] and of (b) in the Association B.";
 findVacuumRep[graph_,basis_List,onlyIndices_:False]:=findVacuumRep[graph,GroupBy[basis,nEdges]]
 findVacuumRep[graph_?hasTadpolesQ,basis_,onlyIndices_:False]:=Module[{isomorphic},
-  isomorphic=Position[Outer[isomorphicQuptoTadpoles,slideBubbles[graph],basis@nEdges[graph],1],True];
+  isomorphic=Flatten@Position[Outer[isomorphicQuptoTadpoles,slideBubbles[graph],basis@nEdges[graph],1],True];
   If[isomorphic=={}, 
     Return[{}], 
     If[onlyIndices,
-      Return[{#[[1]],{#[[2]],#[[3]]}}&@Insert[First@isomorphic,nEdges[graph]]],
-      Return[{slideBubbles[graph][[#[[1]]]],basis[#[[2]]][[#[[3]]]]}&@Insert[First@isomorphic,nEdges[graph],{2}]]
+      Return[{First@isomorphic,{nEdges[graph],Last@isomorphic}}],
+      Return[{slideBubbles[graph][[First@isomorphic]],basis[nEdges[graph]][[Last@isomorphic]]}]
     ];
   ];
 ];
 findVacuumRep[graph_,basis_Association,onlyIndices_:False]:=Module[{isomorphic},
-  isomorphic=Position[Outer[isomorphicQ,slideBubbles[graph],basis@nEdges[graph],1],True];
+  isomorphic=Flatten@Position[Outer[isomorphicQ,slideBubbles[graph],basis@nEdges[graph],1],True];
   If[isomorphic=={}, 
     Return[{}], 
     If[onlyIndices,
-      Return[{#[[1]],{#[[2]],#[[3]]}}&@Insert[First@isomorphic,nEdges[graph]]],
-      Return[{slideBubbles[graph][[#[[1]]]],basis[#[[2]]][[#[[3]]]]}&@Insert[First@isomorphic,nEdges[graph],{2}]]
+      Return[{First@isomorphic,{nEdges[graph],Last@isomorphic}}],
+      Return[{slideBubbles[graph][[First@isomorphic]],basis[nEdges[graph]][[Last@isomorphic]]}]
     ];
   ];
 ];
