@@ -117,6 +117,8 @@ b) corresponding graph in B that is isomorphic to (a), if any.
 The function has an optional third argument which when True only returns the
 indices of (a) in slideBubblesp[G] and of (b) in the Association B.
 If there is no matching representative it returns an empty list.";
+multIsoPerm::usage = "multIsoPerm[M,I] takes the multiplicities M and the isomorphism
+I and returns the multiplicities reordered according to I";
 
 
 (* ::Chapter::Closed:: *)
@@ -364,7 +366,7 @@ isomorphicQuptoTadpoles[g1_,g2_]:=isomorphicQuptoBubbles[collapsePropagator[g1,U
 (*Vacuum graphs*)
 
 
-ClearAll[graphToMult,multToGraph,findVacuumRep]
+ClearAll[graphToMult,multToGraph,toVacuum,findVacuumRep,multIsoPerm]
 
 graphToMult[graph_]:=Module[{rules,invrules,mult,collapsed},
 rules=momCons[graph];
@@ -402,6 +404,12 @@ findVacuumRep[graph_,basis_Association,onlyIndices_:False]:=Module[{isomorphic},
     ];
   ];
 ];
+
+multIsoPerm[mult_,iso_]:=Module[{aux,auxrest},
+aux=KeyMap[(#-4)&,KeySort[Abs/@Association@@iso]];
+auxrest=AssociationThread[Catenate@Position[mult,0],Complement[Range[Length@mult],Values[aux]]];
+Permute[mult,Values@(Normal@KeySort@Union[aux,auxrest])]
+]
 
 
 End[]; (* `Private` *)
