@@ -7,12 +7,11 @@ dimension=ToExpression@$CommandLine[[4]];
 
 If[$Notebooks, SetDirectory[NotebookDirectory[]];];
 <<vacuum_iso_bubbles.m
-Get["./anc/Level"<>ToString[level]<>"Diagrams.m"];
 Get["./expansion_prep/expansion_prep_N"<>ToString[level]<>".m"];
 
 
-readfile="vacExpand_"<>ToString[diagram]<>"_"<>ToString[dimension]<>".exp";
-savefile="vacExpand_nofact_"<>ToString[diagram]<>"_"<>ToString[dimension]<>".exp";
+readfile="vacExpand_N"<>ToString[level]<>"_"<>ToString[diagram]<>"_"<>ToString[dimension]<>".exp";
+savefile="vacExpand_nofact_N"<>ToString[level]<>"_"<>ToString[diagram]<>"_"<>ToString[dimension]<>".exp";
 parent=Last@vacReps[level][[diagram]];
 
 
