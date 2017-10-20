@@ -128,7 +128,7 @@ I and returns the multiplicities reordered according to I";
 Begin["`Private`"];
 
 
-(* ::Chapter::Closed:: *)
+(* ::Chapter:: *)
 (*General Graph Functions*)
 
 
@@ -188,11 +188,11 @@ mom[i__]:=mom/@{i};
 mom[i_]/;Abs[i]<n:=k[i];
 mom[n]:= - Total[k/@Range[1,n-1]];
 mom[i_]/;Abs[i]>n:=l[i];
-Solve[(Total/@(mom@@@(Select[graph,Length[#]>1&])))==0,l/@Range[n+L+1,nEdges[graph]]][[1]]
+Solve[(Total/@(mom@@@(Select[graph,Length[#]>1&])))==0(*,l/@Range[n+L+1,nEdges[graph]]*)][[1]]
 ]
 
 
-(* ::Chapter::Closed:: *)
+(* ::Chapter:: *)
 (*Graph Isomorphism*)
 
 
@@ -230,6 +230,8 @@ If[Not@OrderedQ[{10.0, 2}, {$VersionNumber, $ReleaseNumber}],
 
 ClearAll[isomorphismRule]
 
+isomorphismRule[{},graph_]:={};
+isomorphismRule[graph_,{}]:={};
 isomorphismRule[graph1_?hasBubbleLikeQ,graph2_?hasBubbleLikeQ]:=Module[{mmagraph1,mmagraph2,colors1,colors2,vertexiso,edges1,edges2,targetedges},
   mmagraph1=toMmaGraphwLab[graph1];
   mmagraph2=toMmaGraphwLab[graph2];
@@ -362,7 +364,7 @@ isomorphicQuptoTadpoles[g1_,g2_]/;(nTadpoles[g1]!=nTadpoles[g2]):=False
 isomorphicQuptoTadpoles[g1_,g2_]:=isomorphicQuptoBubbles[collapsePropagator[g1,Union@@findTadpoleLegs/@findTadpoles[g1]],collapsePropagator[g2,Union@@findTadpoleLegs/@findTadpoles[g2]]]
 
 
-(* ::Chapter::Closed:: *)
+(* ::Chapter:: *)
 (*Vacuum graphs*)
 
 
@@ -390,7 +392,7 @@ findVacuumRep[graph_?hasTadpolesQ,basis_,onlyIndices_:False]:=Module[{isomorphic
     Return[{}], 
     If[onlyIndices,
       Return[{First@isomorphic,{nEdges[graph],Last@isomorphic}}],
-      Return[{slideBubbles[graph][[First@isomorphic]],basis[nEdges[graph]][[Last@isomorphic]]}]
+      Return[{{First@isomorphic,{nEdges[graph],Last@isomorphic}},slideBubbles[graph][[First@isomorphic]],basis[nEdges[graph]][[Last@isomorphic]]}]
     ];
   ];
 ];
@@ -400,16 +402,23 @@ findVacuumRep[graph_,basis_Association,onlyIndices_:False]:=Module[{isomorphic},
     Return[{}], 
     If[onlyIndices,
       Return[{First@isomorphic,{nEdges[graph],Last@isomorphic}}],
-      Return[{slideBubbles[graph][[First@isomorphic]],basis[nEdges[graph]][[Last@isomorphic]]}]
+      Return[{{First@isomorphic,{nEdges[graph],Last@isomorphic}},slideBubbles[graph][[First@isomorphic]],basis[nEdges[graph]][[Last@isomorphic]]}]
     ];
   ];
 ];
 
-multIsoPerm[mult_,iso_]:=Module[{aux,auxrest},
+multIsoPerm[mult_,{}]:={};
+multIsoPerm[mult_,iso_]:=Module[{max,multaux,aux,auxrest},
 aux=KeyMap[(#-4)&,KeySort[Abs/@Association@@iso]];
-auxrest=AssociationThread[Catenate@Position[mult,0],Complement[Range[Length@mult],Values[aux]]];
-Permute[mult,Values@(Normal@KeySort@Union[aux,auxrest])]
+max=Max[Keys[#],Values[Abs/@#]]&@aux;
+(*Print[max];*)
+multaux=If[Length[mult]<max,Join[mult,ConstantArray[0,max-Length[mult]]],mult];
+auxrest=AssociationThread[Catenate@Position[multaux,0],Complement[Range[Length@multaux],Values[aux]]];
+Permute[multaux,Values@(Normal@KeySort@Union[aux,auxrest])]
 ]
+
+
+ 
 
 
 End[]; (* `Private` *)
