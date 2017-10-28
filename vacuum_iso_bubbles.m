@@ -128,7 +128,7 @@ I and returns the multiplicities reordered according to I";
 Begin["`Private`"];
 
 
-(* ::Chapter:: *)
+(* ::Chapter::Closed:: *)
 (*General Graph Functions*)
 
 
@@ -263,7 +263,7 @@ automorphismRules[graph_]:=Module[{mmagraph,colors,vertexiso,edges1,edges2,targe
   edges2=PropertyValue[mmagraph,EdgeLabels];
   targetedges=Table[(*Catenate[*)(((First/@aux)/.edges2)/.DirectedEdge[a_,b_]:>-DirectedEdge[b,a])/.edges2(*]*),{aux,edges1}];
   bubbleisos=MapThread[Sort[Thread[(Last/@#1)-> #2]]&,{edges1,targetedges}];
-  bubbleisos//.{x___,Rule[a_List,b_List],y___}:>Sequence@@({x,Sequence@@#,y}&/@ Map[Thread[Rule[a,#]]&, Permutations[b]])
+  bubbleisos//.{x___,Rule[a_List,b_List],y___}:>Sequence@@({x,Sequence@@#,y}&/@ Map[Thread[Rule[a,#]]&, Permutations[b]])/.Rule[a_?Negative,b_]:>Rule[-a,-b]
 ]
 
 
@@ -365,7 +365,7 @@ isomorphicQuptoTadpoles[g1_,g2_]:=isomorphicQuptoBubbles[collapsePropagator[g1,U
 
 
 (* ::Chapter:: *)
-(*Vacuum graphs*)
+(*Vacuum graphs and dots*)
 
 
 ClearAll[graphToMult,multToGraph,toVacuum,findVacuumRep,multIsoPerm]
@@ -408,8 +408,9 @@ findVacuumRep[graph_,basis_Association,onlyIndices_:False]:=Module[{isomorphic},
 ];
 
 multIsoPerm[mult_,{}]:={};
-multIsoPerm[mult_,iso_]:=Module[{max,multaux,aux,auxrest},
-aux=KeyMap[(#-4)&,KeySort[Abs/@Association@@iso]];
+(*multIsoPer[mult_,iso_]/;Length[iso]\[Equal]Length[mult]:=*)
+multIsoPerm[mult_,iso_,offset_:0]:=Module[{max,multaux,aux,auxrest},
+aux=KeyMap[(#-offset)&,KeySort[Abs/@Association@@iso]];
 max=Max[Keys[#],Values[Abs/@#]]&@aux;
 (*Print[max];*)
 multaux=If[Length[mult]<max,Join[mult,ConstantArray[0,max-Length[mult]]],mult];
