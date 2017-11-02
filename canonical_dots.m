@@ -16,7 +16,7 @@ If[$Notebooks, SetDirectory[NotebookDirectory[]];];
 ClearAll[permDots];
 permDots[dots_,auto_,withperm_:False]:=Module[{n=Length[dots],auxauto,res},
 auxauto=Sort@Join[auto,(#->#)&/@Complement[Range[n],First/@auto]];
-res={Permute[dots,#],#}&@(Abs/@Values@KeySort@auxauto);
+res={Permute[dots,Abs/@Values@KeySort@#],#}&@(auxauto);
 If[Not[withperm],First@res,res]
 ];
 addDots[mult_,graph_]:=Module[{props=Union@@Abs@graph,dots},
@@ -25,30 +25,33 @@ Table[(mult+dots[[i]]),{i,1,Length@dots}]
 ];
 
 
-ClearAll[F,graph,automorphisms,canonical,dotrules,rules,canonicaldots];
+ClearAll[F,graph,automorphisms,canonical,dotrules,rules,canonicaldots,permuted,autoaux];
 graph=basisnofact[nprop][[ndiag]];
 automorphisms=automorphismRules[graph];
-canonical[0]=List@(If[MemberQ[Union@@Abs@graph,#],1,0]&/@Range[15]);
+canonical[0]={{(If[MemberQ[Union@@Abs@graph,#],1,0]&/@Range[15]),automorphisms}};
+dotrules[0]={};
 Print["Finding canonical configurations with up to "<>ToString[maxndots]<>" dots..."];
 Do[
 rules={};
 canonicaldots={};
-addeddots=Flatten[addDots[#,graph]&/@canonical[ndots-1],1];
+addeddots=Flatten[addDots[#,graph]&/@First/@canonical[ndots-1],1];
 While[addeddots=!={},
 aux=First@addeddots;
-AppendTo[canonicaldots,aux];
-rules=Join[rules,{(First@#->aux),Last@#}&/@DeleteDuplicatesBy[(permDots[aux,#,True]&/@automorphisms),First]];
+permuted=(permDots[aux,#,True]&/@automorphisms);
+autoaux=Last/@Cases[permuted,{aux,b__}];
+AppendTo[canonicaldots,{aux,autoaux}];
+rules=Join[rules,{(First@#->aux),Last@#}&/@List@@@Normal[Map[Last]/@GroupBy[permuted,First]]];
 addeddots=DeleteCases[addeddots,Alternatives@@(First@@@rules)];
 ];
 canonical[ndots]=canonicaldots;
-dotrules[ndots]=DeleteCases[rules,{Rule[a_,a_],b_}]/.{(A_->B_):>F[A]->F[B]};
+dotrules[ndots]=DeleteCases[rules,{Rule[a_,a_],b_}]/.{(A_List->B_List):>F@@A->F@@B};
 Print[ToString[ndots]<>" dot(s) done."];
 ,{ndots,1,maxndots}]//AbsoluteTiming//First
 Print["All done."];
 
 
-dotsRules[nprop,ndiag]=Association@@MapThread[Rule,{Range[maxndots],dotrules/@Range[maxndots]},1];
-dotsCanonical[nprop,ndiag]=Association@@MapThread[Rule,{Range[maxndots],Map[F]/@canonical/@Range[maxndots]},1];
+dotsRules[nprop,ndiag]=AssociationThread[Range[0,maxndots],dotrules/@Range[0,maxndots]];
+dotsCanonical[nprop,ndiag]=AssociationThread[Range[0,maxndots],Map[{F@@First@#,Last[#]}&]/@(canonical/@Range[0,maxndots])];
 dotsCount[nprop,ndiag]=Length/@dotsCanonical[nprop,ndiag];
 
 
