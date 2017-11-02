@@ -43,5 +43,8 @@ basisnofact=(Select[#,(Not[hasTadpolesQ[#]]&&Not[hasDanglingSunsetQ[#]])&]&/@bas
 Length/@basisnofact
 
 
+autoTable=Map[automorphismRules]/@basisnofact;
+
+
 If[FileExistsQ["vacuum_basis.m"],DeleteFile["vacuum_basis.m"]]
-Save["vacuum_basis.m",{basisnofact,basiswfact}]
+Save["vacuum_basis.m",{basisnofact,basiswfact,autoTable}]
