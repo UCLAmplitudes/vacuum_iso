@@ -13,28 +13,39 @@ Length@(Union@@%%)
 
 
 (* We define associations for each of the top level (12 edge) graphs *)
-ClearAll[top,family]
+ClearAll[top,family,representatives,classes]
 top=AssociationThread[Range[4],{cube,xcube,tennis,xtennis}];
 family[1] = Association[{12->{top[1]}}];
 family[2] = Association[{12->{top[2]}}];
 family[3] = Association[{12->{top[3]}}];
 family[4] = Association[{12->{top[4]}}];
+Table[representatives[i]=family[i],{i,1,4}];
+Table[classes[i]=List/@family[i],{i,1,4}];
 
 
-(* We obtain all the daughers dow to 5 propagators up to isomophisms, sliding bubbles, and loop level drop *)
-For[j=1,j<5,j++,
-  For[i=1,i<8,i++,
-    AppendTo[family[j],(12-i)-> Union[Select[#,nLoops[#]==5&]&@(collapsePropagator[top[j],#]&/@Subsets[Fold[Union,Abs@top[j]],{i}]),SameTest->isomorphicQuptoBubbles]]
+(* We obtain all the daughters down to 5 propagators up to isomophisms, sliding bubbles, and loop level drop *)
+For[i=1,i<5,i++,
+  For[j=1,j<8,j++,
+    AppendTo[family[i],(12-j)-> Select[#,nLoops[#]==5&]&@(collapsePropagator[top[i],#]&/@Subsets[Fold[Union,Abs@top[i]],{j}])];
+    AppendTo[representatives[i],(12-j)-> Union[family[i][12-j],SameTest->isomorphicQuptoBubbles]];
   ]
 ]
 
 
+allfamilies=Merge[family/@Range[4],Catenate];
+
+
 (* We merge all four associations taking into account common daughers*)
-basiswfact=Union[#,SameTest->isomorphicQuptoTadpoles]&/@Merge[family/@Range[4],Union[Flatten[#,Depth[#]-4]&@#,SameTest->isomorphicQuptoBubbles]&];
-
-
+basiswfact=Union[#,SameTest->isomorphicQuptoTadpoles]&/@Merge[representatives/@Range[4],Union[Flatten[#,Depth[#]-4]&@#,SameTest->isomorphicQuptoBubbles]&];
 (* The counting matches that of the thesis *)
 Length/@basiswfact
+
+
+ClearAll[basisclasseswfact]
+basisclasseswfact=<||>;
+For[x=0,x<8,x++,
+AppendTo[basisclasseswfact, (12-x)->Table[Select[allfamilies[12-x],isomorphicQuptoBubbles[#,basiswfact[12-x][[i]]]&],{i,Length@basiswfact[12-x]}]]
+]
 
 
 (* Now we drop graphs with tadpoles and graphs with dangling sunsets (i.e., factorized graphs) *)
@@ -43,8 +54,18 @@ basisnofact=(Select[#,(Not[hasTadpolesQ[#]]&&Not[hasDanglingSunsetQ[#]])&]&/@bas
 Length/@basisnofact
 
 
+ClearAll[basisclassesnofact]
+basisclassesnofact=<||>;
+For[x=0,x<7,x++,
+AppendTo[basisclassesnofact, (12-x)->Table[Select[allfamilies[12-x],isomorphicQuptoBubbles[#,basisnofact[12-x][[i]]]&],{i,Length@basisnofact[12-x]}]]
+]
+
+
 autoTable=Map[automorphismRules]/@basisnofact;
 
 
+isoTables=Association@@Table[(12-i)->Table[isomorphismRules[basisnofact[12-i][[j]],#]&/@basisclassesnofact[12-i][[j]],{j,Length@basisnofact[12-i]}],{i,0,7}];
+
+
 If[FileExistsQ["vacuum_basis.m"],DeleteFile["vacuum_basis.m"]]
-Save["vacuum_basis.m",{basisnofact,basiswfact,autoTable}]
+Save["vacuum_basis.m",{basisnofact,basisclassesnofact,basiswfact,basisclasseswfact,autoTable,isoTables}]
