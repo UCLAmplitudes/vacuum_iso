@@ -14,10 +14,10 @@ If[$Notebooks, SetDirectory[NotebookDirectory[]];];
 
 
 ClearAll[permDots];
-permDots[dots_,auto_,withperm_:False]:=Module[{n=Length[dots],auxauto,res},
-auxauto=Sort@Join[auto,(#->#)&/@Complement[Range[n],First/@auto]];
-res={Permute[dots,Abs/@Values@KeySort@#],#}&@(auxauto);
-If[Not[withperm],First@res,res]
+inverseIso[iso_]:=iso/.Rule[a_,b_]:>Rule[b,a]/.Rule[a_?Negative,b_]:>Rule[-a,-b]
+permDots[dots_,auto_,withauto_:False]:=Module[{n=Length[dots],perm,res},
+perm=Abs/@Values@KeySort@(Sort@Join[auto,Thread[Complement[Range[15],First/@auto]->Complement[Range[15],Abs/@Last/@auto]]]);
+If[withauto,{Permute[dots,perm],inverseIso@auto},Permute[dots,perm]]
 ];
 addDots[mult_,graph_]:=Module[{props=Union@@Abs@graph,dots},
 dots=Part[IdentityMatrix[Length@mult],props];
@@ -27,7 +27,7 @@ Table[(mult+dots[[i]]),{i,1,Length@dots}]
 
 ClearAll[F,graph,automorphisms,canonical,dotrules,rules,canonicaldots,permuted,autoaux];
 graph=basisnofact[nprop][[ndiag]];
-automorphisms=automorphismRules[graph];
+automorphisms=Catenate@isoTables[nprop][[ndiag]];
 canonical[0]={{(If[MemberQ[Union@@Abs@graph,#],1,0]&/@Range[15]),automorphisms}};
 dotrules[0]={};
 Print["Finding canonical configurations with up to "<>ToString[maxndots]<>" dots..."];
