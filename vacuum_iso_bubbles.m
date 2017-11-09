@@ -5,7 +5,7 @@ BeginPackage["vacuumisobubbles`"];
 Needs["IGraphM`"];
 
 
-(* ::Chapter::Closed:: *)
+(* ::Chapter:: *)
 (*Documentation*)
 
 
@@ -47,6 +47,9 @@ between g1 and g2. The comparison uses the adjacency graphs. Uses IGraphM when t
 isomorphicQ::usage= "isomorphicQ[g1,g2] = True if there is an isomorphism
 between g1 and g2.  Uses IGraphM when there are bubbles present.";
 isomorphismRule::usage = "isomorphismRule[G1,G2] provides an isomorphism between graphs G1 and G2
+given in our standard notation {{-1},{-2},...,{1,5,-7},...}.
+I also works for graphs with bubbles, sunsets etc.";
+isomorphismRules::usage = "isomorphismRule[G1,G2] provides all isomorphisms between graphs G1 and G2
 given in our standard notation {{-1},{-2},...,{1,5,-7},...}.
 I also works for graphs with bubbles, sunsets etc.";
 automorphismRules::usage = "automorphismRules[G] all automorphisms of graph G given 
@@ -254,7 +257,23 @@ isomorphismRule[graph1_,graph2_]:=Module[{mmagraph1,mmagraph2,colors1,colors2,ve
 ]
 
 
+ClearAll[isomorphismRules]
+isomorphismRules[graph1_,graph2_]:=Module[{mmagraph1,mmagraph2,colors1,colors2,vertexiso,edges1,edges2,targetedges,bubbleisos},
+  mmagraph1=toMmaGraphwLab[graph1];
+  mmagraph2=toMmaGraphwLab[graph2];
+  colors1 = Length/@Association@@(PropertyValue[mmagraph1,EdgeLabels]/.DirectedEdge[a_,b_]:>UndirectedEdge[a,b]);
+  colors2 = Length/@Association@@(PropertyValue[mmagraph2,EdgeLabels]/.DirectedEdge[a_,b_]:>UndirectedEdge[a,b]);
+  vertexiso = IGVF2FindIsomorphisms[{UndirectedGraph@mmagraph1,"EdgeColors"->colors1},{UndirectedGraph@mmagraph2,"EdgeColors"->colors2}];
+  edges1=Table[PropertyValue[mmagraph1,EdgeLabels]/.Rule[a_,b_]:>Rule[a/.iso,b],{iso,vertexiso}];
+  edges2=PropertyValue[mmagraph2,EdgeLabels];
+  targetedges=Table[(((First/@aux)/.edges2)/.DirectedEdge[a_,b_]:>-DirectedEdge[b,a])/.edges2,{aux,edges1}];
+  bubbleisos=MapThread[Sort[Thread[(Last/@#1)-> #2]]&,{edges1,targetedges}];
+  bubbleisos//.{x___,Rule[a_List,b_List],y___}:>Sequence@@({x,Sequence@@#,y}&/@ Map[Thread[Rule[a,#]]&, Permutations[b]])/.Rule[a_?Negative,b_]:>Rule[-a,-b]
+]
+
+
 ClearAll[automorphismRules]
+(*automorphismRules[graph_]:=isomorphismRules[graph,graph]*)
 automorphismRules[graph_]:=Module[{mmagraph,colors,vertexiso,edges1,edges2,targetedges,bubbleisos},
   mmagraph=toMmaGraphwLab[graph];
   colors = Length/@Association@@(PropertyValue[mmagraph,EdgeLabels]/.DirectedEdge[a_,b_]:>UndirectedEdge[a,b]);
@@ -265,6 +284,7 @@ automorphismRules[graph_]:=Module[{mmagraph,colors,vertexiso,edges1,edges2,targe
   bubbleisos=MapThread[Sort[Thread[(Last/@#1)-> #2]]&,{edges1,targetedges}];
   bubbleisos//.{x___,Rule[a_List,b_List],y___}:>Sequence@@({x,Sequence@@#,y}&/@ Map[Thread[Rule[a,#]]&, Permutations[b]])/.Rule[a_?Negative,b_]:>Rule[-a,-b]
 ]
+
 
 
 (* ::Chapter::Closed:: *)
