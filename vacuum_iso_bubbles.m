@@ -443,7 +443,7 @@ multToGraph[mult_,parent_]:=collapsePropagator[parent,Part[Union@@Abs[parent],Ca
 
 
 toVacuum[graph_,n_:4]:=Module[{auxgraph},
-  auxgraph=FixedPoint[removeDots[removeExtLegs[remove1PRLegs[#]]]&,graph];
+  auxgraph=FixedPoint[(*removeDots[*)removeExtLegs[remove1PRLegs[#]](*]*)&,graph];
   multToGraph[graphToMult[auxgraph],auxgraph]
 ];
 

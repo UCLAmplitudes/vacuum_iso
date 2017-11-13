@@ -38,7 +38,7 @@ Print["Done"];
 
 nDiagrams[level]=ndiagrams;
 vacReps[level]=vacreps;
-factorizedQ[level]=Equal[#,{}]&/@vacreps;;
+factorizedQ[level]=Equal[#,{}]&/@vacreps;
 vacRepIsos[level]=vacrepisos;
 vacRepDots[level]=If[Length[#]<15,Join[#,ConstantArray[0,15-Length[#]]],Drop[#,15-Length[#]]]&/@vacrepdots;
 If[FileExistsQ[savefile],DeleteFile[savefile]]
