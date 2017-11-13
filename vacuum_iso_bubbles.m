@@ -35,6 +35,12 @@ connectedQ::usage= "connectedQ[V1,V2] = True if the vertives V1 and V2 are conne
 collapsePropagator::usage= "collapsePropagator[G,L] takes graph G in our 
 standard notation {{-1},{-2},...,{1,5,-7},...}, and pinches the leg L. It 
 also admists a list of legs as an argument and will collapse all of them.";
+removePropagator::usage= "removePropagator[G,L] takes graph G in in our 
+standard notation {{-1},{-2},...,{1,5,-7},...}, and deletes the leg L. It 
+also admists a list of legs as an argument and will delete all of them.";
+removeExtLegs::usage=""
+removeDots::usage=""
+remove1PRLegs::usage=""
 momCons::usage = " momCons[G,n,L] solves momentum conservation for the graph G given
 in our standard notation {{-1},{-2},...,{1,5,-7},...}. Optionally one can specify the
 number n of external particles and thenumber of loops L in order to solve for the right
@@ -99,6 +105,7 @@ standard notation {{-1},{-2},...,{1,5,-7},...} can be made isomorphic by removin
 
 
 (* Functions to deal with vacuum graphs and multiplicity/FIRE-style notation" *)
+findDots::usage = "";
 graphToMult::usage = "graphToMult[G] takes the graph G given
 in our standard notation {{-1},{-2},...,{1,5,-7},...} and uses
 momentum conservation in the vertices to bundle together doubled 
@@ -131,7 +138,7 @@ I and returns the multiplicities reordered according to I";
 Begin["`Private`"];
 
 
-(* ::Chapter::Closed:: *)
+(* ::Chapter:: *)
 (*General Graph Functions*)
 
 
@@ -183,6 +190,26 @@ collapsePropagator[diagram_, leg_] := Module[{graph, a1, a2, a3, b1,b2,b3,b4},
 Return[graph]]
 
 
+ClearAll[removePropagator]
+
+removePropagator[diagram_, leg_List]:=Fold[removePropagator,diagram,leg]
+removePropagator[diagram_, leg_] := Module[{graph, a1, a2, a3, b1,b2,b3,b4},
+   graph = diagram;
+   graph = graph /. {a1___, {b2___, leg, b1___}, a2___, {b4___, -leg, b3___},
+                       a3___} :> {a1, {b2, b1}, a2, {b4, b3}, a3};
+   graph = graph /. {a1___, {b2___, -leg, b1___}, a2___, {b4___, leg, b3___},
+                       a3___} :> {a1, {b2, b1}, a2, {b4, b3}, a3};
+Return[graph]]
+
+
+ClearAll[removeExtLegs,removeDots,remove1PRLegs,removeTadpoles]
+removeExtLegs[graph_]:=FixedPoint[collapsePropagator[#,Catenate@Cases[#,{a_}]]&,graph]
+removeDots[graph_]:=FixedPoint[collapsePropagator[#,Cases[#,{a_,b_}:>Abs[a]]]&,graph]
+remove1PRLegs[graph_]:=collapsePropagator[graph,Part[Union@@Abs[graph],Catenate@Position[ConnectedGraphQ/@toMmaUndirGraph/@(removePropagator[graph,#]&/@Union@@Abs[graph]),False]]]
+removeTadpoles[graph_]:=FixedPoint[collapsePropagator[#,findTadpoleLegs/@findTadpoles[#]]&,graph]
+
+
+
 ClearAll[momCons]
 
 momCons[graph_,n_:0,L_:5]:=Module[{mom},
@@ -195,7 +222,7 @@ Solve[(Total/@(mom@@@(Select[graph,Length[#]>1&])))==0(*,l/@Range[n+L+1,nEdges[g
 ]
 
 
-(* ::Chapter:: *)
+(* ::Chapter::Closed:: *)
 (*Graph Isomorphism*)
 
 
@@ -363,7 +390,7 @@ temp=Or@@Values@(Or@@isomorphicQ@@@#&/@temp)
 ]
 
 
-(* ::Chapter::Closed:: *)
+(* ::Chapter:: *)
 (*Tadpole-like objects*)
 
 
@@ -393,17 +420,33 @@ ClearAll[graphToMult,multToGraph,toVacuum,findVacuumRep,multIsoPerm]
 graphToMult[graph_]:=Module[{rules,invrules,mult,collapsed},
 rules=momCons[graph];
 invrules=Cases[momCons[graph],(a_->b_Plus)->((b^2)->a^2)]//Factor;
-mult=KeyMap[(#/.{l[a_]^2:>a})&,Counts[(((l/@Range[nEdges[graph]])/.rules)^2//Factor)/.invrules]];
-collapsed=Association@@((#->0)&/@Complement[Range[nEdges[graph]],Keys[mult]]);
+mult=KeyMap[(#/.{l[a_]^2:>a})&,Counts[(((l/@Union@@Abs[graph])/.rules)^2//Factor)/.invrules]];
+collapsed=Association@@((#->0)&/@Complement[Union@@Abs[graph],Keys[mult]]);
 Values@KeySort@Union[mult,collapsed]
 ]
 
-multToGraph[mult_,parent_]:=collapsePropagator[parent,Catenate@Union[Position[mult,0],Position[mult,x_Integer?Negative]]]
+findDots[fullgraph_,reducedgraph_]:=Module[{},
+rules=momCons[fullgraph];
+dots=AssociationThread[Union@@Abs[reducedgraph],Count[(l[#]^2&/@Union@@Abs[fullgraph])/.rules//Factor,#]&/@((l[#]^2&/@Union@@Abs[reducedgraph])/.rules//Factor)];
+zeros=AssociationThread@@{#,ConstantArray[0,Length[#]]}&@Complement[Union@@Abs[fullgraph],Union@@Abs[reducedgraph]];
+Values@KeySort@Union[dots,zeros]
+]
 
-toVacuum[graph_,n_:4]:=Module[{auxgraph,tocollaps},
+multToGraph[mult_,parent_]:=collapsePropagator[parent,Part[Union@@Abs[parent],Catenate@Position[mult,x_?NonPositive]]]
+
+(*toVacuum[graph_,n_:4]:=Module[{auxgraph,tocollaps},
   auxgraph=(collapsePropagator[graph,Range[n]]/.{a_Integer :> Sign[a](Abs[a]-n)});
+  auxgraph=FixedPoint[collapsePropagator[#,Catenate@Cases[#,{a_}]]&,auxgraph];
+  auxgraph=FixedPoint[collapsePropagator[#,Cases[#,{a_,b_}\[RuleDelayed]Abs[a]]]&,auxgraph];
   multToGraph[graphToMult[auxgraph],auxgraph]/.{a_Integer :> Sign[a](Abs[a]+n)}
+];*)
+
+
+toVacuum[graph_,n_:4]:=Module[{auxgraph},
+  auxgraph=FixedPoint[removeDots[removeExtLegs[remove1PRLegs[#]]]&,graph];
+  multToGraph[graphToMult[auxgraph],auxgraph]
 ];
+
 
 findVacuumRep[graph_,basis_List,onlyIndices_:False]:=findVacuumRep[graph,GroupBy[basis,nEdges]]
 findVacuumRep[graph_?hasTadpolesQ,basis_,onlyIndices_:False]:=Module[{isomorphic},
@@ -427,7 +470,16 @@ findVacuumRep[graph_,basis_Association,onlyIndices_:False]:=Module[{isomorphic},
   ];
 ];
 
-multIsoPerm[mult_,{}]:={};
+multIsoPerm[mult_,{}]:={}
+multIsoPerm[mult_,iso_,offset_:0]:=Module[{max,multaux,aux,auxzero},
+aux=KeyMap[(#-offset)&,KeySort[Abs/@Association@@iso]];
+max=Max[Length[mult],Keys[aux],Values[aux]];
+auxzero=AssociationThread[Complement[Range[max],Keys[aux]],Complement[Range[max],Values[aux]]];
+multaux=If[Length[mult]<max,Join[mult,ConstantArray[0,max-Length[mult]]],mult];
+Permute[multaux,Values@(Normal@KeySort@Union[aux,auxzero])]
+]
+
+(*multIsoPerm[mult_,{}]:={};
 (*multIsoPer[mult_,iso_]/;Length[iso]\[Equal]Length[mult]:=*)
 multIsoPerm[mult_,iso_,offset_:0]:=Module[{max,multaux,aux,auxrest},
 aux=KeyMap[(#-offset)&,KeySort[Abs/@Association@@iso]];
@@ -436,7 +488,7 @@ max=Max[Keys[#],Values[Abs/@#]]&@aux;
 multaux=If[Length[mult]<max,Join[mult,ConstantArray[0,max-Length[mult]]],mult];
 auxrest=AssociationThread[Catenate@Position[multaux,0],Complement[Range[Length@multaux],Values[aux]]];
 Permute[multaux,Values@(Normal@KeySort@Union[aux,auxrest])]
-]
+]*)
 
 
  

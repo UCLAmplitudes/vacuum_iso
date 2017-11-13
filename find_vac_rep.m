@@ -1,45 +1,45 @@
 (* ::Package:: *)
 
 level=ToExpression@$CommandLine[[2]];
-savefile="expansion_prep/expansion_prep_N"<>ToString[level]<>".m";
+solution=ToExpression@$CommandLine[[3]];
+If[solution!=410&&solution!=752,Print["Please, choose solution with 410 or 720 diagrams"]; Quit[];]
+savefile="expansion_prep/expansion_prep_N"<>ToString[level]<>"_"<>ToString[solution]<>".m";
 
 
 If[$Notebooks, SetDirectory[NotebookDirectory[]];];
 <<vacuum_iso_bubbles.m;
 <<vacuum_basis.m;
-Get["./anc/Level"<>ToString[level]<>"Diagrams.m"];
+Get["./cutlists/N"<>ToString[level]<>"MCutList_"<>ToString[solution]<>".m"];
 
 
-nDiagramsList={410,2473,7917,15156,19567,17305,10745};
-(*nonZero={410,0,1758,3262,4587,4066,2804};*)
-
-nDiagrams[level]=nDiagramsList[[level+1]];
-
-nonZeroNum[level]=Catenate@Position[(ToExpression["NumerN"<>ToString[level]][#]===0)&/@Range[nDiagrams[level]],False];
-nonZero[level]=Last[nonZeroNum[level]];
-
-Print["There are "<>ToString[nDiagrams[level]]<>" N"<>ToString[level]<>" diagrams, of which "<>ToString[nonZero[level]]<>" are nonzero." ]
+diagramslist=ToExpression["N"<>ToString[level]<>"MC"];
+ndiagrams=Length@diagramslist;
 
 
 Print["Finding vacuum representatives for N"<>ToString[level]<>" diagrams..."];
-vacReps[level]=Table[findVacuumRep[toVacuum[Join[Thread[-{Range[4]}],ToExpression["DiagramN"<>ToString[level]][i]]],basisnofact],{i,1,nonZero[level]}];
+vacreps=Table[findVacuumRep[toVacuum[diagramslist[[i]]],basisnofact],{i,1,ndiagrams}];//AbsoluteTiming//First
 Print["Done"];
 
 
-factorizedQ[level]=Equal[#,{}]&/@vacReps[level];
+Print["Finding isomorphisms for N"<>ToString[level]<>" diagrams..."];
+vacrepisos=If[#=={},{},isomorphismRule[#[[2]],#[[3]]]]&/@vacreps;//AbsoluteTiming//First
+Print["Done"];
 
 
-vacRepDotsUnord=graphToMult/@((collapsePropagator[#,Range[4]]&/@((Join[Thread[-{Range[4]}],ToExpression["DiagramN"<>ToString[level]][#]])&/@Range[nonZero[level]]))/.{a_Integer :> Sign[a](Abs[a]-4)});
+Print["Finding unsorted dots for N"<>ToString[level]<>" diagrams..."];
+vacrepdotsunsorted=MapThread[findDots,{removeExtLegs/@remove1PRLegs/@diagramslist,If[#=={},{},Part[#,2]]&/@vacreps}];//AbsoluteTiming//First
+Print["Done"];
 
 
-vacRepIsos[level]=If[#=={},{},isomorphismRule[#[[2]],#[[3]]]]&/@vacReps[level];
+Print["Sorting dots for N"<>ToString[level]<>" diagrams..."];
+vacrepdots=MapThread[multIsoPerm[#1,#2,4]&,{vacrepdotsunsorted,vacrepisos}];//AbsoluteTiming//First
+Print["Done"];
 
 
-vacRepDots[level]=If[Length[#]<15,Join[#,ConstantArray[0,15-Length[#]]],Drop[#,15-Length[#]]]&/@MapThread[multIsoPerm,{vacRepDotsUnord,vacRepIsos[level]}];
-
-
+nDiagrams[level]=ndiagrams;
+vacReps[level]=vacreps;
+factorizedQ[level]=Equal[#,{}]&/@vacreps;;
+vacRepIsos[level]=vacrepisos;
+vacRepDots[level]=If[Length[#]<15,Join[#,ConstantArray[0,15-Length[#]]],Drop[#,15-Length[#]]]&/@vacrepdots;
 If[FileExistsQ[savefile],DeleteFile[savefile]]
-Save[savefile,{nDiagrams,nonZero,factorizedQ,vacReps,vacRepIsos,vacRepDots}];
-
-
-Quit[]
+Save[savefile,{nDiagrams,vacReps,factorizedQ,vacRepIsos,vacRepDots}];
