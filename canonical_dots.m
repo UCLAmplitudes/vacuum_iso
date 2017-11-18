@@ -27,9 +27,21 @@ Table[(mult+dots[[i]]),{i,1,Length@dots}]
 ClearAll[F,graph,automorphisms,canonical,dotrules,rules,canonicaldots,permuted,autoaux];
 graph=basisnofact[nprop][[ndiag]];
 automorphisms=Catenate@isoTables[nprop][[ndiag]];
-canonical[0]={{(If[MemberQ[Union@@Abs@graph,#],1,0]&/@Range[15]),automorphisms}};
-dotrules[0]={};
+
 Print["Finding canonical configurations with up to "<>ToString[maxndots]<>" dots..."];
+ndots=0;
+rules={};
+canonicaldots={};
+addeddots={(If[MemberQ[Union@@Abs@graph,#],1,0]&/@Range[15])};
+aux=First@addeddots;
+permuted=(permDots[aux,#,True]&/@automorphisms);
+autoaux=Last/@Cases[permuted,{aux,b__}];
+AppendTo[canonicaldots,{aux,autoaux}];
+rules=Join[rules,{(First@#->aux),Last@#}&/@List@@@Normal[Map[Last]/@GroupBy[permuted,First]]];
+addeddots=DeleteCases[addeddots,Alternatives@@(First@@@rules)];
+canonical[ndots]=canonicaldots;
+dotrules[ndots]=DeleteCases[rules,{Rule[a_,a_],b_}]/.{(A_List->B_List):>F@@A->F@@B};
+Print[ToString[ndots]<>" dot(s) done."];
 Do[
 rules={};
 canonicaldots={};
