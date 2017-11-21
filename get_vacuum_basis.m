@@ -48,6 +48,9 @@ AppendTo[basisclasseswfact, (12-x)->Table[Select[allfamilies[12-x],isomorphicQup
 ]
 
 
+basisnofact=(Select[#,(Not[hasTadpolesQ[#]]&&Not[hasDanglingSunsetQ[#]])&]&/@basiswfact);
+
+
 (* Now we drop graphs with tadpoles and graphs with dangling sunsets (i.e., factorized graphs) *)
 basisnofact=(Select[#,(Not[hasTadpolesQ[#]]&&Not[hasDanglingSunsetQ[#]])&]&/@basiswfact);
 (* And the counting again matches*)
@@ -64,11 +67,16 @@ AppendTo[basisclassesnofact, (12-x)->Table[Select[allfamilies[12-x],isomorphicQu
 autoTable=Map[automorphismRules]/@basisnofact;
 
 
-basisclasseswfact[10][[9]
-
-
 isoTables=Association@@Table[(12-i)->Table[(isomorphismRules[#[[2]],#[[3]]]&@findVacuumRep[#,Association[(12-i)->{basisnofact[12-i][[j]]}]])&/@basisclassesnofact[12-i][[j]],{j,Length@basisnofact[12-i]}],{i,0,7}];
 
 
 If[FileExistsQ["vacuum_basis.m"],DeleteFile["vacuum_basis.m"]]
 Save["vacuum_basis.m",{basisnofact,basisclassesnofact,basiswfact,basisclasseswfact,autoTable,isoTables}]
+
+
+basisfactorized=(Select[#,(hasTadpolesQ[#]||hasDanglingSunsetQ[#])&]&/@basiswfact);
+factorized=(Select[#,(hasTadpolesQ[#]||hasDanglingSunsetQ[#])&]&@@@basisclasseswfact);
+
+
+If[FileExistsQ["factorized.m"],DeleteFile["factorized.m"]]
+Save["factorized.m",{basisfactorized,factorized}]
