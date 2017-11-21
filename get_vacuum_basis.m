@@ -64,7 +64,10 @@ AppendTo[basisclassesnofact, (12-x)->Table[Select[allfamilies[12-x],isomorphicQu
 autoTable=Map[automorphismRules]/@basisnofact;
 
 
-isoTables=Association@@Table[(12-i)->Table[isomorphismRules[basisnofact[12-i][[j]],#]&/@basisclassesnofact[12-i][[j]],{j,Length@basisnofact[12-i]}],{i,0,7}];
+basisclasseswfact[10][[9]
+
+
+isoTables=Association@@Table[(12-i)->Table[(isomorphismRules[#[[2]],#[[3]]]&@findVacuumRep[#,Association[(12-i)->{basisnofact[12-i][[j]]}]])&/@basisclassesnofact[12-i][[j]],{j,Length@basisnofact[12-i]}],{i,0,7}];
 
 
 If[FileExistsQ["vacuum_basis.m"],DeleteFile["vacuum_basis.m"]]
