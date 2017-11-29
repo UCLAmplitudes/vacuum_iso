@@ -5,13 +5,6 @@ If[$MachineName=="julio-mba", SetDirectory[NotebookDirectory[]]];
 <<toplevel_canonical.m
 
 
-(* First we check that the top graph labels align with our canonical form*)
-Table[l/@Range[12]/.momCons[top[i],0]/.extrashift[i],{i,1,4}];
-Join[{l/@Range[12]},%]//TableForm
-(* There are 14 independent propagators and l[5] is the missing ISP *)
-Length@(Union@@%%)
-
-
 (* We define associations for each of the top level (12 edge) graphs *)
 ClearAll[top,family,representatives,classes]
 top=AssociationThread[Range[4],{cube,xcube,tennis,xtennis}];
@@ -24,6 +17,8 @@ Table[classes[i]=List/@family[i],{i,1,4}];
 
 
 (* We obtain all the daughters down to 5 propagators up to isomophisms, sliding bubbles, and loop level drop *)
+If[$Notebooks,ProgressIndicator[Dynamic[i/4]]];
+If[$Notebooks,ProgressIndicator[Dynamic[j/7]]];
 For[i=1,i<5,i++,
   For[j=1,j<8,j++,
     AppendTo[family[i],(12-j)-> Select[#,nLoops[#]==5&]&@(collapsePropagator[top[i],#]&/@Subsets[Fold[Union,Abs@top[i]],{j}])];
@@ -48,15 +43,13 @@ AppendTo[basisclasseswfact, (12-x)->Table[Select[allfamilies[12-x],isomorphicQup
 ]
 
 
-basisnofact=(Select[#,(Not[hasTadpolesQ[#]]&&Not[hasDanglingSunsetQ[#]])&]&/@basiswfact);
-
-
 (* Now we drop graphs with tadpoles and graphs with dangling sunsets (i.e., factorized graphs) *)
 basisnofact=(Select[#,(Not[hasTadpolesQ[#]]&&Not[hasDanglingSunsetQ[#]])&]&/@basiswfact);
 (* And the counting again matches*)
 Length/@basisnofact
 
 
+If[$Notebooks,ProgressIndicator[Dynamic[x/7]]];
 ClearAll[basisclassesnofact]
 basisclassesnofact=<||>;
 For[x=0,x<7,x++,

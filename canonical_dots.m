@@ -65,7 +65,6 @@ dotsRules[nprop,ndiag]=AssociationThread[Range[0,maxndots],dotrules/@Range[0,max
 dotsCanonical[nprop,ndiag]=AssociationThread[Range[0,maxndots],Map[{F@@First@#,Last[#]}&]/@(canonical/@Range[0,maxndots])];
 dotsCount[nprop,ndiag]=Length/@dotsCanonical[nprop,ndiag];
 
-<<interfaceForJulio.m;
 
 If[FileExistsQ[savefile],DeleteFile[savefile]];
 Save[savefile,{dotsCount,dotsCanonical,dotsRules}];

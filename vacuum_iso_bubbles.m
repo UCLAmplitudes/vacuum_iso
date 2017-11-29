@@ -222,7 +222,7 @@ Solve[(Total/@(mom@@@(Select[graph,Length[#]>1&])))==0(*,l/@Range[n+L+1,nEdges[g
 ]
 
 
-(* ::Chapter::Closed:: *)
+(* ::Chapter:: *)
 (*Graph Isomorphism*)
 
 
@@ -314,7 +314,7 @@ automorphismRules[graph_]:=Module[{mmagraph,colors,vertexiso,edges1,edges2,targe
 
 
 
-(* ::Chapter::Closed:: *)
+(* ::Chapter:: *)
 (*Bubble-like objects*)
 
 
@@ -355,7 +355,7 @@ slideBubbles[graph_,bubbles_:{}]/;Depth[bubbles]>3:=Module[{newGraphs,bubblesofN
 newGraphs=slideBubbles[graph,First@bubbles];
 bubblesofNewGraphs=(findBubbleLike[#,0,1]&/@newGraphs);
 newBubbles=Select[#,(ContainsAll[findInLegs/@Drop[bubbles,1],{findInLegs[#]}])&]&/@bubblesofNewGraphs;
-Return[Union[Fold[Union,Flatten[#,Depth[#]-4]&/@MapThread[slideBubbles,{newGraphs,newBubbles}]],SameTest->isomorphicQ]];
+Return[DeleteDuplicates[{graph}~Join~(Fold[Union,Flatten[#,Depth[#]-4]&/@MapThread[slideBubbles,{newGraphs,newBubbles}]])]];
 ];
 slideBubbles[graph_,bubbles_:{}]/;And[Depth[graph]==3,Depth[bubbles]==3]:=Module[{outLegs},
     If[Not@MemberQ[findBubbleLike[graph,0,1],bubbles],
@@ -378,13 +378,13 @@ slideBubbles[graph_,bubbles_:{}]/;bubbles=={}:=slideBubbles[graph,findBubbleLike
 ClearAll[isomorphicQuptoBubblesAll,isomorphicQuptoBubbles]
 isomorphicQuptoBubblesAll[g1_,g2_]/;(Not[hasBubbleLikeQ[g1,0,1]]&&Not[hasBubbleLikeQ[g2,0,1]]):=isomorphicQ[g1,g2]
 isomorphicQuptoBubblesAll[g1_,g2_]/;(nBubbleLike[g1]!=nBubbleLike[g2]):=False
-isomorphicQuptoBubblesAll[g1_,g2_]:=Or@@isomorphicQ@@@Catenate@Outer[List,slideBubbles[g1],slideBubbles[g2],1]
+isomorphicQuptoBubblesAll[g1_,g2_]:=Or@@isomorphicQ@@@Catenate@Outer[List,Union[slideBubbles[g1],SameTest->isomorphicQ],Union[slideBubbles[g2],SameTest->isomorphicQ],1]
 
 isomorphicQuptoBubbles[g1_,g2_]/;(Not[hasBubbleLikeQ[g1,0,1]]&&Not[hasBubbleLikeQ[g2,0,1]]):=isomorphicQ[g1,g2]
 isomorphicQuptoBubbles[g1_,g2_]/;(nBubbleLike[g1]!=nBubbleLike[g2]):=False
 isomorphicQuptoBubbles[g1_,g2_]:=Module[{a1,a2,temp},
-a1=GroupBy[slideBubbles[g1],nEdges];
-a2=GroupBy[slideBubbles[g2],nEdges];
+a1=GroupBy[Union[slideBubbles[g1],SameTest->isomorphicQ],nEdges];
+a2=GroupBy[Union[slideBubbles[g2],SameTest->isomorphicQ],nEdges];
 temp=Catenate/@Merge[{KeyTake[a1,#],KeyTake[a2,#]}&@Intersection[Keys[a1],Keys[a2]],Outer[List,#[[1]],#[[2]],1]&];
 temp=Or@@Values@(Or@@isomorphicQ@@@#&/@temp)
 ]
@@ -425,7 +425,7 @@ collapsed=Association@@((#->0)&/@Complement[Union@@Abs[graph],Keys[mult]]);
 Values@KeySort@Union[mult,collapsed]
 ]
 
-findDots[fullgraph_,reducedgraph_]:=Module[{},
+findDots[fullgraph_,reducedgraph_]:=Module[{dots,zeros},
 rules=momCons[fullgraph];
 dots=AssociationThread[Union@@Abs[reducedgraph],Count[(l[#]^2&/@Union@@Abs[fullgraph])/.rules//Factor,#]&/@((l[#]^2&/@Union@@Abs[reducedgraph])/.rules//Factor)];
 zeros=AssociationThread@@{#,ConstantArray[0,Length[#]]}&@Complement[Union@@Abs[fullgraph],Union@@Abs[reducedgraph]];
