@@ -17,8 +17,8 @@ Table[classes[i]=List/@family[i],{i,1,4}];
 
 
 (* We obtain all the daughters down to 5 propagators up to isomophisms, sliding bubbles, and loop level drop *)
-If[$Notebooks,ProgressIndicator[Dynamic[i/4]]];
-If[$Notebooks,ProgressIndicator[Dynamic[j/7]]];
+If[$Notebooks,ProgressIndicator[Dynamic[i/4]]]
+If[$Notebooks,ProgressIndicator[Dynamic[j/7]]]
 For[i=1,i<5,i++,
   For[j=1,j<8,j++,
     AppendTo[family[i],(12-j)-> Select[#,nLoops[#]==5&]&@(collapsePropagator[top[i],#]&/@Subsets[Fold[Union,Abs@top[i]],{j}])];
@@ -36,6 +36,7 @@ basiswfact=Union[#,SameTest->isomorphicQuptoTadpoles]&/@Merge[representatives/@R
 Length/@basiswfact
 
 
+If[$Notebooks,ProgressIndicator[Dynamic[x/7]]]
 ClearAll[basisclasseswfact]
 basisclasseswfact=<||>;
 For[x=0,x<8,x++,
@@ -49,7 +50,7 @@ basisnofact=(Select[#,(Not[hasTadpolesQ[#]]&&Not[hasDanglingSunsetQ[#]])&]&/@bas
 Length/@basisnofact
 
 
-If[$Notebooks,ProgressIndicator[Dynamic[x/7]]];
+If[$Notebooks,ProgressIndicator[Dynamic[x/7]]]
 ClearAll[basisclassesnofact]
 basisclassesnofact=<||>;
 For[x=0,x<7,x++,
@@ -60,7 +61,7 @@ AppendTo[basisclassesnofact, (12-x)->Table[Select[allfamilies[12-x],isomorphicQu
 autoTable=Map[automorphismRules]/@basisnofact;
 
 
-isoTables=Association@@Table[(12-i)->Table[(isomorphismRules[#[[2]],#[[3]]]&@findVacuumRep[#,Association[(12-i)->{basisnofact[12-i][[j]]}]])&/@basisclassesnofact[12-i][[j]],{j,Length@basisnofact[12-i]}],{i,0,7}];
+isoTables=Association@@Table[(12-i)->Table[(isomorphismRules[#[[3]],#[[2]]]&@findVacuumRep[#,Association[(12-i)->{basisnofact[12-i][[j]]}]])&/@basisclassesnofact[12-i][[j]],{j,Length@basisnofact[12-i]}],{i,0,7}];
 
 
 If[FileExistsQ["vacuum_basis.m"],DeleteFile["vacuum_basis.m"]]
