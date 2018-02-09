@@ -1,15 +1,13 @@
 (* ::Package:: *)
 
-(*My choice of labels*)
+(* Top level vacuum graphs with canonical labels *)
 
+ntop = 1;
 
-(* Top level vacuum graphs with ready for canonical labels *)
 top[1] = {{-1, 2, 5}, {-2, 3, 7}, {-3, 1, -6}, {6, -5, -7}};
 
 
-
-(*Choice of labels*)
-
+(* Choice of labels *)
 
 vars = {q[1] = k[1], 
        q[2] = k[2], 

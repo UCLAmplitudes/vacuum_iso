@@ -1,16 +1,15 @@
 (* ::Package:: *)
 
-(*My choice of labels*)
+(* Top level vacuum graphs with canonical labels *)
+
+ntop = 2;
+
+top[1] = {{1, -2, -8}, {-1, 3, 9}, {8, 6, -5}, {5, -9, -7}, {-3, 7, 4}, {-4, -6, 2}};
+
+top[2] = {{-10, -2, 9}, {10, 3, -8}, {8, 6, -5}, {5, -9, -7}, {-3, 7, 4}, {-4, -6, 2}};
 
 
-(* Top level vacuum graphs with ready for canonical labels *)
-prism= {{1, -2, -8}, {-1, 3, 9}, {8, 6, -5}, {5, -9, -7}, {-3, 7, 4}, {-4, -6, 2}};
-
-xprism= {{-10, -2, 9}, {10, 3, -8}, {8, 6, -5}, {5, -9, -7}, {-3, 7, 4}, {-4, -6, 2}};
-
-
-(*Choice of labels*)
-
+(* Choice of labels *)
 
 vars = {q[1] = k[1], 
        q[2] = k[2], 
