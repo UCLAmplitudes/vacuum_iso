@@ -1,21 +1,30 @@
 (* ::Package:: *)
 
-nprop=ToExpression@$CommandLine[[2]];
-ndiag=ToExpression@$CommandLine[[3]];
-maxndots=ToExpression@$CommandLine[[4]];
+nloops=ToExpression@$CommandLine[[2]];
+nprop=ToExpression@$CommandLine[[3]];
+ndiag=ToExpression@$CommandLine[[4]];
+maxndots=ToExpression@$CommandLine[[5]];
 
-savefile="canonical_dots/canonical_dots_"<>ToString[nprop]<>"_"<>ToString[ndiag]<>"_"<>ToString[maxndots]<>".m";
+(*nloops=4;
+nprop=9;
+ndiag=1;
+maxndots=2;*)
+
+savefile="canonical_dots/canonical_dots_"<>ToString[nloops]<>"_"<>ToString[nprop]<>"_"<>ToString[ndiag]<>"_"<>ToString[maxndots]<>".m";
 
 
 If[$Notebooks, SetDirectory[NotebookDirectory[]];];
 <<vacuum_iso_bubbles.m;
-<<vacuum_basis.m;
+Get["vacuum_basis_"<>ToString[nloops]<>".m"];
+
+
+totndots=Binomial[nloops,2]+nloops;
 
 
 ClearAll[permDots];
 inverseIso[iso_]:=iso/.Rule[a_,b_]:>Rule[b,a]/.Rule[a_?Negative,b_]:>Rule[-a,-b]
 permDots[dots_,auto_,withauto_:False]:=Module[{n=Length[dots],perm,res},
-perm=Abs/@Values@KeySort@(Sort@Join[auto,Thread[Complement[Range[15],First/@auto]->Complement[Range[15],Abs/@Last/@auto]]]);
+perm=Abs/@Values@KeySort@(Sort@Join[auto,Thread[Complement[Range[totndots],First/@auto]->Complement[Range[totndots],Abs/@Last/@auto]]]);
 If[withauto,{Permute[dots,perm],inverseIso@auto},Permute[dots,perm]]
 ];
 addDots[mult_,graph_]:=Module[{props=Union@@Abs@graph,dots},
@@ -32,7 +41,7 @@ Print["Finding canonical configurations with up to "<>ToString[maxndots]<>" dots
 ndots=0;
 rules={};
 canonicaldots={};
-addeddots={(If[MemberQ[Union@@Abs@graph,#],1,0]&/@Range[15])};
+addeddots={(If[MemberQ[Union@@Abs@graph,#],1,0]&/@Range[totndots])};
 aux=First@addeddots;
 permuted=(permDots[aux,#,True]&/@automorphisms);
 autoaux=Last/@Cases[permuted,{aux,b__}];
