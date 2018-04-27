@@ -69,13 +69,15 @@ autoTable=Map[automorphismRules]/@basisnofact;
 isoTables=Association@@Table[(nprop-i)->Table[(isomorphismRules[#[[3]],#[[2]]]&@findVacuumRep[#,Association[(nprop-i)->{basisnofact[nprop-i][[j]]}]])&/@basisclassesnofact[nprop-i][[j]],{j,Length@basisnofact[nprop-i]}],{i,0,depthToDo}];
 
 
-If[FileExistsQ["vacuum_basis_"<>ToString[nloops]<>".m"],DeleteFile["vacuum_basis_"<>ToString[nloops]<>".m"]]
-Save["vacuum_basis_"<>ToString[nloops]<>".m",{basisnofact,basisclassesnofact,basiswfact,basisclasseswfact,autoTable,isoTables}]
+savefile="tables/vacuum_basis_"<>ToString[nloops]<>".m";
+If[FileExistsQ[savefile],DeleteFile[savefile]]
+Save[savefile,{basisnofact,basisclassesnofact,basiswfact,basisclasseswfact,autoTable,isoTables}]
 
 
 basisfactorized=(Select[#,(hasTadpolesQ[#]||hasDanglingSunsetQ[#])&]&/@basiswfact);
 factorized=(Select[#,(hasTadpolesQ[#]||hasDanglingSunsetQ[#])&]&@@@basisclasseswfact);
 
 
-If[FileExistsQ["factorized_"<>ToString[nloops]<>".m"],DeleteFile["factorized_"<>ToString[nloops]<>".m"]]
-Save["factorized_"<>ToString[nloops]<>".m",{basisfactorized,factorized}]
+savefile="tables/factorized_"<>ToString[nloops]<>".m";
+If[FileExistsQ[savefile],DeleteFile[savefile]]
+Save[savefile,{basisfactorized,factorized}]

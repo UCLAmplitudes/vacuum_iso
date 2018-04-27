@@ -8,7 +8,7 @@ savefile="expansion_prep/expansion_prep_N"<>ToString[level]<>"_"<>ToString[solut
 
 If[$Notebooks, SetDirectory[NotebookDirectory[]];];
 <<vacuum_iso_bubbles.m;
-<<vacuum_basis.m;
+<<vacuum_basis_5.m;
 Get["./cutlists/N"<>ToString[level]<>"MCutList_"<>ToString[solution]<>".m"];
 
 
