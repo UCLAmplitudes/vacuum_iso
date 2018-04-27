@@ -1,6 +1,6 @@
 (* ::Package:: *)
 
-nloops=4;
+nloops=6;
 
 
 If[$MachineName=="julio-mba", SetDirectory[NotebookDirectory[]]];
@@ -18,11 +18,14 @@ Table[representatives[i]=family[i],{i,ntop}];
 Table[classes[i]=List/@family[i],{i,ntop}];
 
 
+depthToDo = 2; (*nprop-nloops*)
+
+
 (* We obtain all the daughters down to nloops propagators up to isomophisms, sliding bubbles, and loop level drop *)
 If[$Notebooks,ProgressIndicator[Dynamic[i/ntop]]]
-If[$Notebooks,ProgressIndicator[Dynamic[j/(nprop-nloops)]]]
+If[$Notebooks,ProgressIndicator[Dynamic[j/depthToDo]]]
 For[i=1,i<=ntop,i++,
-  For[j=1,j<=(nprop-nloops),j++,
+  For[j=1,j<=depthToDo,j++,
     AppendTo[family[i],(nprop-j)-> Select[#,nLoops[#]==nloops&]&@(collapsePropagator[top[i],#]&/@Subsets[Fold[Union,Abs@top[i]],{j}])];
     AppendTo[representatives[i],(nprop-j)-> Union[family[i][nprop-j],SameTest->isomorphicQuptoBubbles]];
   ]
@@ -38,11 +41,11 @@ basiswfact=Union[#,SameTest->isomorphicQuptoTadpoles]&/@Merge[representatives/@R
 Length/@basiswfact
 
 
-If[$Notebooks,ProgressIndicator[Dynamic[x/(nprop-nloops)]]]
+If[$Notebooks,ProgressIndicator[Dynamic[x/depthToDo]]]
 ClearAll[basisclasseswfact]
 basisclasseswfact=<||>;
-For[x=0,x<=(nprop-nloops),x++,
-AppendTo[basisclasseswfact, (nprop-x)->Table[Select[allfamilies[nprop-x],isomorphicQuptoBubbles[#,basiswfact[nprop-x][[i]]]&],{i,Length@basiswfact[nprop-x]}]]
+For[x=0,x<=depthToDo,x++,
+AppendTo[basisclasseswfact, (nprop-x)->Table[Select[allfamilies[nprop-x],isomorphicQuptoBubbles[#,basiswfact[nprop-x][[k]]]&],{k,Length@basiswfact[nprop-x]}]];
 ]
 
 
@@ -55,15 +58,15 @@ Length/@basisnofact
 If[$Notebooks,ProgressIndicator[Dynamic[x/7]]]
 ClearAll[basisclassesnofact]
 basisclassesnofact=<||>;
-For[x=0,x<= (nprop-nloops),x++,
-AppendTo[basisclassesnofact, (nprop-x)->Table[Select[allfamilies[nprop-x],isomorphicQuptoBubbles[#,basisnofact[nprop-x][[i]]]&],{i,Length@basisnofact[nprop-x]}]]
+For[x=0,x<= depthToDo,x++,
+AppendTo[basisclassesnofact, (nprop-x)->Table[Select[allfamilies[nprop-x],isomorphicQuptoBubbles[#,basisnofact[nprop-x][[i]]]&],{i,Length@basisnofact[nprop-x]}]];
 ]
 
 
 autoTable=Map[automorphismRules]/@basisnofact;
 
 
-isoTables=Association@@Table[(nprop-i)->Table[(isomorphismRules[#[[3]],#[[2]]]&@findVacuumRep[#,Association[(nprop-i)->{basisnofact[nprop-i][[j]]}]])&/@basisclassesnofact[nprop-i][[j]],{j,Length@basisnofact[nprop-i]}],{i,0,(nprop-nloops)}];
+isoTables=Association@@Table[(nprop-i)->Table[(isomorphismRules[#[[3]],#[[2]]]&@findVacuumRep[#,Association[(nprop-i)->{basisnofact[nprop-i][[j]]}]])&/@basisclassesnofact[nprop-i][[j]],{j,Length@basisnofact[nprop-i]}],{i,0,depthToDo}];
 
 
 If[FileExistsQ["vacuum_basis_"<>ToString[nloops]<>".m"],DeleteFile["vacuum_basis_"<>ToString[nloops]<>".m"]]
