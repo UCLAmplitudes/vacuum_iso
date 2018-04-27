@@ -15,7 +15,7 @@ savefile="canonical_dots/canonical_dots_"<>ToString[nloops]<>"_"<>ToString[nprop
 
 If[$Notebooks, SetDirectory[NotebookDirectory[]];];
 <<vacuum_iso_bubbles.m;
-Get["vacuum_basis_"<>ToString[nloops]<>".m"];
+Get["tables/vacuum_basis_"<>ToString[nloops]<>".m"];
 
 
 totndots=Binomial[nloops,2]+nloops;
