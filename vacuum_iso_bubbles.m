@@ -204,7 +204,7 @@ Return[graph]]
 
 ClearAll[removeExtLegs,removeDots,remove1PRLegs,removeTadpoles]
 removeExtLegs[graph_]:=FixedPoint[collapsePropagator[#,Catenate@Cases[#,{a_}]]&,graph]
-removeDots[graph_]:=FixedPoint[collapsePropagator[#,Cases[#,{a_,b_}:>Abs[a]]]&,graph]
+removeDots[graph_]:=FixedPoint[collapsePropagator[#,Cases[#,{a_,b_}:>Max[Abs[a],Abs[b]]]]&,graph]
 remove1PRLegs[graph_]:=collapsePropagator[graph,Part[Union@@Abs[graph],Catenate@Position[ConnectedGraphQ/@toMmaUndirGraph/@(removePropagator[graph,#]&/@Union@@Abs[graph]),False]]]
 removeTadpoles[graph_]:=FixedPoint[collapsePropagator[#,findTadpoleLegs/@findTadpoles[#]]&,graph]
 
@@ -459,13 +459,18 @@ findVacuumRep[graph_?hasTadpolesQ,basis_,onlyIndices_:False]:=Module[{isomorphic
     ];
   ];
 ];
-findVacuumRep[graph_,basis_Association,onlyIndices_:False]:=Module[{isomorphic},
-  isomorphic=Flatten@Position[Outer[isomorphicQ,slideBubbles[graph],basis@nEdges[graph],1],True];
-  If[isomorphic=={}, 
+findVacuumRep[graph_,basis_Association,onlyIndices_:False]:=Module[{isomorphic,foundLevel},
+  isomorphic={};
+  foundLevel=0;
+  Do[
+     isomorphic=Flatten@Position[Outer[isomorphicQ,slideBubbles[graph],basis[basislevel],1],True];
+     If[isomorphic =!= {}, foundLevel=basislevel;Break[]];
+  ,{basislevel,basis//Keys}];
+  If[isomorphic==={}, 
     Return[{}], 
     If[onlyIndices,
-      Return[{First@isomorphic,{nEdges[graph],Last@isomorphic}}],
-      Return[{{First@isomorphic,{nEdges[graph],Last@isomorphic}},slideBubbles[graph][[First@isomorphic]],basis[nEdges[graph]][[Last@isomorphic]]}]
+      Return[{First@isomorphic,{foundLevel,Last@isomorphic}}],
+      Return[{{First@isomorphic,{foundLevel,Last@isomorphic}},slideBubbles[graph][[First@isomorphic]],basis[foundLevel][[Last@isomorphic]]}]
     ];
   ];
 ];
