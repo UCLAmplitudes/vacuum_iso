@@ -14,7 +14,7 @@ ClearAll[family,representatives,classes]
 For[x=1,x<=ntop,x++,
   family[x] = Association[{nprop->{top[x]}}]
 ];
-Table[representatives[i]=family[i],{i,ntop}];
+(*Table[representatives[i]=family[i],{i,ntop}];*)
 Table[classes[i]=List/@family[i],{i,ntop}];
 
 
@@ -27,20 +27,25 @@ If[$Notebooks,ProgressIndicator[Dynamic[j/depthToDo]]]
 For[i=1,i<=ntop,i++,
   For[j=1,j<=depthToDo,j++,
     AppendTo[family[i],(nprop-j)-> Select[#,nLoops[#]==nloops&]&@(collapsePropagator[top[i],#]&/@Subsets[Fold[Union,Abs@top[i]],{j}])];
-    AppendTo[representatives[i],(nprop-j)-> Union[family[i][nprop-j],SameTest->isomorphicQuptoBubbles]];
+    (*AppendTo[representatives[i],(nprop-j)-> Union[family[i][nprop-j],SameTest->isomorphicQuptoBubbles]];  Don't need representative now that we are calculating using Gather*)
   ]
 ]
 
 
 If[$Notebooks,ProgressIndicator[Dynamic[diagNum/ntop]]]
-If[$Notebooks,ProgressIndicator[Dynamic[x/depthToDo]]]
 Do[
 Clear[basisnofact,basisclassesnofact,basiswfact,basisclasseswfact,autoTable,isoTables,basisfactorized,factorized];
 
+basisclasseswfact[diagNum] = Gather[#,isomorphicQuptoBubbles]&/@family[diagNum];
+basiswfact[diagNum] = #[[All,1]]&/@basisclasseswfact[diagNum];
+
+basisclassesnofact[diagNum] = Select[#,Not[hasTadpolesQ[#[[1]]] ] &&Not[hasDanglingSunsetQ[#[[1]]]]&]&/@basisclasseswfact[diagNum];
+basisnofact[diagNum] = #[[All,1]]&/@basisclassesnofact[diagNum];
+
+
+(* Old way of doing it.  Does a lot of extra computations
 basiswfact[diagNum]=Union[#,SameTest->isomorphicQuptoTadpoles]&/@representatives[diagNum];
 basisnofact[diagNum] = (Select[#,(Not[hasTadpolesQ[#]]&&Not[hasDanglingSunsetQ[#]])&]&/@basiswfact[diagNum]);
-
-autoTable[diagNum]=Map[automorphismRules]/@basisnofact[diagNum];
 
 basisclasseswfact[diagNum]=<||>;
 For[x=0,x<=depthToDo,x++,
@@ -51,6 +56,7 @@ basisclassesnofact[diagNum]=<||>;
 For[x=0,x<= depthToDo,x++,
 AppendTo[basisclassesnofact[diagNum], (nprop-x)->Table[Select[family[diagNum][nprop-x],isomorphicQuptoBubbles[#,basisnofact[diagNum][nprop-x][[i]]]&],{i,Length@basisnofact[diagNum][nprop-x]}]];
 ];
+*)
 
 autoTable[diagNum]=Map[automorphismRules]/@basisnofact[diagNum];
 
