@@ -146,7 +146,7 @@ ClearAll[standardGraphRep,graphPlot,toMmaGraph,toMmaUndirGraph,toMmaAdj,toMmaGra
 
 standardGraphRep[graph_] := Module[{}, Table[{Position[graph, j][[1, 1]] -> Position[graph, -j][[1, 1]], j}, {j, Union[Abs[Flatten[graph]]]}]]
 
-graphPlot[graph_] := GraphPlot[standardGraphRep[graph], DirectedEdges -> True]
+graphPlot[graph_] := GraphPlot[standardGraphRep[graph]/.{Rule[a_,b_],x_/;x>=100} :> Rule[a,b], DirectedEdges -> True]
 
 toMmaGraph[graph_]:=Graph@Table[Position[graph, j][[1, 1]]\[DirectedEdge]Position[graph, -j][[1, 1]], {j, Union[Abs[Flatten[graph]]]}]
 
@@ -155,11 +155,9 @@ toMmaUndirGraph[graph_]:=Graph@Table[Position[graph, j][[1, 1]]<->Position[graph
 toMmaAdj[graph_]:=(Graph[Abs[Select[graph,Length[#]>1&]]/.{{x__}/;Depth[{x}]<3:>Sequence@@(Sort/@EdgeList@CompleteGraph[Length[{x}]]/.MapThread[(#1->#2)&,{VertexList@CompleteGraph[Length[{x}]],{x}}])},
 VertexLabels->Automatic]);
 
-toMmaGraphwLab[graph_?hasBubbleLikeQ]:=Module[{labels,bubbleop},
-labels=GroupBy[standardGraphRep[graph],First[#]/.Rule->DirectedEdge&->Last];
-bubbleop=-labels/@(Keys[labels]/.{DirectedEdge[a_,b_]:>DirectedEdge[b,a]})/.Missing[__]->{};
-labels=AssociationThread[Keys@labels,MapThread[Union,{Values@labels,bubbleop}]];
-labels=DeleteDuplicates[labels,Sort@#1==Sort[-#2]&];
+toMmaGraphwLab[graph_?hasBubbleLikeQ]:=Module[{sgr,labels},
+sgr = standardGraphRep[graph]/.{Rule[a_,b_],x_}/;b<a:>{Rule[b,a],-x};
+labels=GroupBy[sgr,(First[#]/.Rule->DirectedEdge)&->Last];
 Graph[Keys[labels],EdgeLabels->Normal[labels]]
 ];
 toMmaGraphwLab[graph_]:=Graph@@{First@Transpose[#],EdgeLabels->Rule@@@#}&@standardGraphRep[graph]
@@ -172,6 +170,8 @@ cubicQ[graph_]:=Union[Length/@Select[graph,Length[#]>1&]]=={3}
 nEdges[graph_]:=Length[Union@@Abs[graph]]
 
 nLoops[graph_]:=Length@FindFundamentalCycles@(toMmaUndirGraph[graph])
+(*Mathematica doesn't like some bubbles when building FundamentalCycles.  So slide the bubbles to try to trick it*)
+nLoops[graph_?hasBubbleLikeQ]:=Max[Length/@FindFundamentalCycles/@toMmaUndirGraph/@slideBubbles[graph]]
 
 connectedQ[{vert1_,vert2_}]:=(Length[Union@@#]>Length[Union@@Abs@#])&@{vert1,vert2}
 
@@ -285,7 +285,7 @@ isomorphismRule[graph1_,graph2_]:=Module[{mmagraph1,mmagraph2,colors1,colors2,ve
 
 
 ClearAll[isomorphismRules]
-isomorphismRules[graph1_,graph2_]:=Module[{mmagraph1,mmagraph2,colors1,colors2,vertexiso,edges1,edges2,targetedges,bubbleisos},
+isomorphismRules[graph1_,graph2_]:=Module[{(*mmagraph1,mmagraph2,colors1,colors2,vertexiso,edges1,edges2,targetedges,bubbleisos*)},
   mmagraph1=toMmaGraphwLab[graph1];
   mmagraph2=toMmaGraphwLab[graph2];
   colors1 = Length/@Association@@(PropertyValue[mmagraph1,EdgeLabels]/.DirectedEdge[a_,b_]:>UndirectedEdge[a,b]);
@@ -343,6 +343,7 @@ findBubbleLike[graph_,multiplicity_:0,valence_:-1]:=Module[{pairs,bubbles},
 ];
 
 hasBubbleLikeQ[graph_,multiplicity_:0,valence_:-1]:=Length[findBubbleLike[graph,multiplicity,valence]]>0
+hasBubbleLikeQ[graph_/;Length[graph]===1]:=True
 
 nBubbleLike[graph_,multiplicity_:0,valence_:-1]:=Length[findBubbleLike[graph,multiplicity,valence]]
 
